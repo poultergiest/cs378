@@ -2,7 +2,8 @@
 # Project 1 Makefile
 
 CC = g++
-CFLAGS = -Wall -ffast-math -O3
+CFLAGS = -Wall
+OPFLOAGS = -ffast-math -O3
 TARGET = MatrixRatio
 SOURCE = MissRatio.cpp
 

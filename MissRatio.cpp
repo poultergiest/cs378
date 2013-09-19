@@ -8,234 +8,190 @@ stuff do WHATEVER YOU WANT man. This is just something to start with.
 ***Created and Owned by Ethan Poulter and Jake Wilke*** 
 */
 
+#define SIZE 3
+
 /* Function Declarations */
-void IJK(int size);
-void IKJ(int size);
-void JIK(int size);
-void KIJ(int size);
-void KJI(int size);
-void fillMatrices(double matrixA[][3], double matrixB[][3], int size);
+void IJK();
+void IKJ();
+void JIK();
+void KIJ();
+void KJI();
+void fillMatrices(double matrixA[SIZE][SIZE], double matrixB[SIZE][SIZE]);
+
+using namespace std;
+
+void printMatrix(double matrix[SIZE][SIZE]) {
+  for(int i = 0; i < SIZE; i++){
+    for(int j = 0; j < SIZE; j++){
+       cout << matrix[i][j] << " ";
+    }
+     cout << endl;  
+  }
+}
 
 
 /* Implementation of the first naive I, J, K matrix multiply */
-void IJK(int size) {
+void IJK() {
 
   int i,j,k;
-  double sum;
-  double matrixA [size][3];
-  double matrixB [size][3];
-  double matrixC [size][size];
+  double matrixA [SIZE][SIZE];
+  double matrixB [SIZE][SIZE];
+  double matrixC [SIZE][SIZE];
 
-  fillMatrices(matrixA, matrixB, size); 
+  fillMatrices(matrixA, matrixB); 
 
-  for (i = 0; i < size; i++){
-    for (j = 0; j < size; j++){
-    sum = 0;
-    for (k = 0; k < size; k++){
-      sum += matrixA[i][k] * matrixB[k][j];
-    }
-    matrixC[i][j] = sum;
+  for (i = 0; i < SIZE; i++){
+    for (j = 0; j < SIZE; j++){
+      for (k = 0; k < SIZE; k++){
+        matrixC[i][j] += matrixA[i][k] * matrixB[k][j];
+      }
     }
   }
 
-  std::cout<<"The result is "<<std::endl;
-  for(i = 0; i < size; i++){
-    for( j = 0; j < size; j++){
-      std:: cout<<matrixC[i][j]<<" ";
-    }
-    std:: cout<<std::endl;  
-  }
+  cout << "The result is " << endl;
+  printMatrix(matrixC);
 }
 
-void IKJ(int size) {
+void IKJ() {
 
   int i,j,k;
-  double sum;
-  double matrixA [size][3];
-  double matrixB [size][3];
-  double matrixC [size][size];
+  double matrixA [SIZE][SIZE];
+  double matrixB [SIZE][SIZE];
+  double matrixC [SIZE][SIZE];
 
-  fillMatrices(matrixA, matrixB, size); 
+  fillMatrices(matrixA, matrixB); 
 
-  for (i = 0; i < size; i++){
-    for (k = 0; k < size; k++){
-      sum = 0;
-      for (j = 0; j < size; j++){
-        sum += matrixA[i][k] * matrixB[k][j];
+  for (i = 0; i < SIZE; i++){
+    for (k = 0; k < SIZE; k++){
+      for (j = 0; j < SIZE; j++){
+        matrixC[i][j] += matrixA[i][k] * matrixB[k][j];
       }
-      matrixC[i][j] = sum;
     }
   }
 
-  std::cout<<"The result is "<<std::endl;
-  for(i = 0; i < size; i++){
-    for( j = 0; j < size; j++){
-      std:: cout<<matrixC[i][j]<<" ";
-    }
-    std:: cout<<std::endl;  
-  }
+  cout << "The result is " << endl;
+  printMatrix(matrixC);
 }
 
-void JIK(int size) {
+void JIK() {
 
   int i,j,k;
-  double sum;
-  double matrixA [size][3];
-  double matrixB [size][3];
-  double matrixC [size][size];
+  double matrixA [SIZE][SIZE];
+  double matrixB [SIZE][SIZE];
+  double matrixC [SIZE][SIZE];
 
-  fillMatrices(matrixA, matrixB, size); 
+  fillMatrices(matrixA, matrixB); 
 
-  for (j = 0; j < size; j++){ 
-    for (i = 0; i < size; i++){
-      sum = 0;
-      for (k = 0; k < size; k++){
-        sum += matrixA[i][k] * matrixB[k][j];
+  for (j = 0; j < SIZE; j++){
+    for (i = 0; i < SIZE; i++){
+      for (k = 0; k < SIZE; k++){
+        matrixC[i][j] += matrixA[i][k] * matrixB[k][j];
       }
-      matrixC[i][j] = sum;
     }
   }
 
-  std::cout<<"The result is "<<std::endl;
-  for(i = 0; i < size; i++){
-    for( j = 0; j < size; j++){
-      std:: cout<<matrixC[i][j]<<" ";
-    }
-    std:: cout<<std::endl;  
-  }
+  cout << "The result is " << endl;
+  printMatrix(matrixC);
 }
 
-void JKI(int size) {
+void JKI() {
 
   int i,j,k;
-  double sum;
-  double matrixA [size][3];
-  double matrixB [size][3];
-  double matrixC [size][size];
+  double matrixA [SIZE][SIZE];
+  double matrixB [SIZE][SIZE];
+  double matrixC [SIZE][SIZE];
 
-  fillMatrices(matrixA, matrixB, size); 
+  fillMatrices(matrixA, matrixB); 
 
-  for (j = 0; j < size; j++){
-    for (k = 0; k < size; k++){
-      sum = 0;
-      for (i = 0; i < size; i++){
-        sum += matrixA[i][k] * matrixB[k][j];
+  for (j = 0; j < SIZE; j++){
+    for (k = 0; k < SIZE; k++){
+      for (i = 0; i < SIZE; i++){
+        matrixC[i][j] += matrixA[i][k] * matrixB[k][j];
       }
-      matrixC[i][j] = sum;
     }
   }
 
-  std::cout<<"The result is "<<std::endl;
-  for(i = 0; i < size; i++){
-    for( j = 0; j < size; j++){
-      std:: cout<<matrixC[i][j]<<" ";
-    }
-    std:: cout<<std::endl;  
-  }
+  cout << "The result is " << endl;
+  printMatrix(matrixC);
 }
 
-void KIJ(int size) {
+void KIJ() {
 
   int i,j,k;
-  double sum;
-  double matrixA [size][3];
-  double matrixB [size][3];
-  double matrixC [size][size];
+  double matrixA [SIZE][SIZE];
+  double matrixB [SIZE][SIZE];
+  double matrixC [SIZE][SIZE];
 
-  fillMatrices(matrixA, matrixB, size); 
+  fillMatrices(matrixA, matrixB); 
 
-  for (k = 0; k < size; k++){
-    for (i = 0; i < size; i++){
-      sum = 0;
-      for (j = 0; j < size; j++){
-        sum += matrixA[i][k] * matrixB[k][j];
+  for (k = 0; k < SIZE; k++){
+    for (i = 0; i < SIZE; i++){
+      for (j = 0; j < SIZE; j++){
+        matrixC[i][j] += matrixA[i][k] * matrixB[k][j];
       }
-      matrixC[i][j] = sum;
     }
   }
 
-  std::cout<<"The result is "<<std::endl;
-  for(i = 0; i < size; i++){
-    for( j = 0; j < size; j++){
-      std:: cout<<matrixC[i][j]<<" ";
-    }
-    std:: cout<<std::endl;  
-  }
+  cout << "The result is " << endl;
+  printMatrix(matrixC);
 }
 
-void KJI(int size) {
+void KJI() {
 
   int i,j,k;
-  double sum;
-  double matrixA [size][3];
-  double matrixB [size][3];
-  double matrixC [size][size];
+  double matrixA [SIZE][SIZE];
+  double matrixB [SIZE][SIZE];
+  double matrixC [SIZE][SIZE];
 
-  fillMatrices(matrixA, matrixB, size); 
+  fillMatrices(matrixA, matrixB); 
 
-  for (k = 0; k < size; k++){
-    for (j = 0; j < size; j++){
-      sum = 0;
-      for (i = 0; i < size; i++){
-        sum += matrixA[i][k] * matrixB[k][j];
+  for (k = 0; k < SIZE; k++){
+    for (j = 0; j < SIZE; j++){
+      for (i = 0; i < SIZE; i++){
+        matrixC[i][j] += matrixA[i][k] * matrixB[k][j];
       }
-      matrixC[i][j] = sum;
     }
   }
 
-  std::cout<<"The result is "<<std::endl;
-  for(i = 0; i < size; i++){
-    for( j = 0; j < size; j++){
-      std:: cout<<matrixC[i][j]<<" ";
-    }
-    std:: cout<<std::endl;  
-  }
+  cout << "The result is " << endl;
+  printMatrix(matrixC);
 }
 
 /* Fills matrices A and B with random doubles by taking random ints 100<x<600 divided by
 random ints where 1<x<100 */
-void fillMatrices(double matrixA[][3], double matrixB[][3], int size) {
-
-  int i, j, k;
+void fillMatrices(double matrixA[SIZE][SIZE], double matrixB[SIZE][SIZE]) {
   double r1, r2;
 
-  std::cout<<"Matrix one"<<std::endl;
-  for (i = 0; i < size; i++) {
-    for(j = 0; j < size; j++) {
-      r1 = rand() % 500 + 100;
-      r1 /= rand() % 100 + 1;
+  
+  for (int i = 0; i < SIZE; i++) {
+    for(int j = 0; j < SIZE; j++) {
+      r1  = rand() % 10 + 1;
+      //r1 /= rand() % 100 + 1;
+      r2  = rand() % 10 + 1;
+      //r2 /= rand() % 100 + 1;
       matrixA[i][j] = r1;
-      std::cout<<r1<<" ";;
+      matrixB[i][j] = r2;
     }
-    std::cout<<std::endl;
   }
 
-  std::cout<<"Matrix two"<<std::endl;
-  for (i = 0; i < size; i++) {
-    for(j = 0; j < size; j++) {
-      r2 = rand() % 500 + 100;
-      r2 /= rand() % 100 + 1;
-      matrixB[i][j] = r2;
-      std::cout<<r2<<" ";
-    }
-    std:: cout<<std::endl;
-  }
+  cout << "Matrix one" << endl;
+  printMatrix(matrixA);
+  cout << "Matrix two" << endl;
+  printMatrix(matrixB);
 }
 
 
 int main () {
-  int size = 3; 
-
-  std::cout<<"IJK"<<std::endl;
-  IJK(size);
-  std::cout<<"IKJ"<<std::endl;
-  IKJ(size);
-  std::cout<<"JIK"<<std::endl;
-  JIK(size);
-  std::cout<<"JKI"<<std::endl;
-  JKI(size); 
-  std::cout<<"KIJ"<<std::endl;
-  KIJ(size);
-  std::cout<<"KJI"<<std::endl; 
-  KJI(size);
+  cout << "IJK" << endl;
+  IJK();
+  cout << "IKJ" << endl;
+  IKJ();
+  cout << "JIK" << endl;
+  JIK();
+  cout << "JKI" << endl;
+  JKI(); 
+  cout << "KIJ" << endl;
+  KIJ();
+  cout << "KJI" << endl; 
+  KJI();
 }
