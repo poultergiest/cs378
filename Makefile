@@ -14,3 +14,5 @@ matrix: MissRatio.cpp
 
 clean:
 	rm -f *.out MatrixRatio
+	
+g++ MissRatio.cpp -Wall -I$TACC_PAPI_INC  -Wl,-rpath,$TACC_PAPI_LIB -L$TACC_PAPI_LIB -lpapi
