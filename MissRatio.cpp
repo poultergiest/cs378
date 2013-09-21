@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
-#include <papi.h>
+//#include <papi.h>
 
 /* Feel free to modify the structure (like if you want headers and 
 stuff do WHATEVER YOU WANT man. This is just something to start with. 
@@ -35,8 +35,8 @@ void printMatrix(double matrix[SIZE][SIZE]) {
 void IJK(double matrixA[SIZE][SIZE], double matrixB[SIZE][SIZE], int n) {
 
   int i,j,k;
-  double matrixA [SIZE][SIZE];
-  double matrixB [SIZE][SIZE];
+  //double matrixA [SIZE][SIZE];
+  //double matrixB [SIZE][SIZE];
   double matrixC [SIZE][SIZE];
 
   fillMatrices(matrixA, matrixB); 
@@ -183,6 +183,7 @@ void fillMatrices(double matrixA[SIZE][SIZE], double matrixB[SIZE][SIZE]) {
 
 int main() {
   double matrix1[SIZE][SIZE];
+  double matrix2[SIZE][SIZE];
   cout << "IJK" << endl;
-  IJK(matrix1, matrix1, SIZE);
+  IJK(matrix1, matrix2, SIZE);
 }
