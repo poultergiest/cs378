@@ -1,3 +1,11 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <iostream>
+#include <math.h>
+#include <papi.h>
+
+using namespace std;
+
 void initPapi() {
   int retval = PAPI_library_init(PAPI_VER_CURRENT); 
   if (retval != PAPI_VER_CURRENT) {
@@ -34,6 +42,10 @@ void readCounter(int eventSet, long_long* value) {
 }
 
 
+int IJK() {
+  return 42;
+}
+
 int main () {
 
   int EventSet=PAPI_NULL;
@@ -54,96 +66,66 @@ int main () {
   // ------------------------------------------------------------------
   
   addAndStartCounterForInstruction(EventSet, PAPI_LST_INS);
-/* Defined in tests/do_loops.c in the PAPI source distribution */
-//Start process
+
+  /* Defined in tests/do_loops.c in the PAPI source distribution */
+  //Start process
   cout << "IJK" << endl;
-  IJK(double matrixA[SIZE][SIZE], double matrixB[SIZE][SIZE], int n);
+  IJK();
 
-/* Read the counting events in the Event Set */
-  if (PAPI_read(EventSet, values) != PAPI_OK) {
-  }
-/* Create the Event Set */
-  if (PAPI_create_eventset(&EventSet) != PAPI_OK) {
-  }
-/* Add Total Instructions Executed to our Event Set */
-// Ran once for L1, L2, total cycles, floating points instructions, and total instructions. 
-  if (PAPI_add_event(EventSet, PAPI_LST_INS) != PAPI_OK){
-  }
-/* Start counting events in the Event Set */
-  if (PAPI_start(EventSet) != PAPI_OK){
-  }
-/* Defined in tests/do_loops.c in the PAPI source distribution */
-//Start process
-  cout << "IKJ" << endl;
-  IKJ();
+  readCounter(EventSet, values);
 
-/* Read the counting events in the Event Set */
-  if (PAPI_read(EventSet, values) != PAPI_OK) {
-  }
+  cout << values[0] << endl;
 
+  // ------------------------------------------------------------------
 
-/* Create the Event Set */
-  if (PAPI_create_eventset(&EventSet) != PAPI_OK) {
-  }
-/* Add Total Instructions Executed to our Event Set */
-// Ran once for L1, L2, total cycles, floating points instructions, and total instructions. 
-  if (PAPI_add_event(EventSet, PAPI_LST_INS) != PAPI_OK){
-  }
-/* Start counting events in the Event Set */
-  if (PAPI_start(EventSet) != PAPI_OK){
-  }
-/* Defined in tests/do_loops.c in the PAPI source distribution */
-//Start process
-  cout << "JKI" << endl;
-  JKI();
+  addAndStartCounterForInstruction(EventSet, PAPI_LST_INS);
 
-/* Read the counting events in the Event Set */
-  if (PAPI_read(EventSet, values) != PAPI_OK) {
-  }
-/* Create the Event Set */
-  if (PAPI_create_eventset(&EventSet) != PAPI_OK) {
-  }
-/* Add Total Instructions Executed to our Event Set */
-// Ran once for L1, L2, total cycles, floating points instructions, and total instructions. 
-  if (PAPI_add_event(EventSet, PAPI_LST_INS) != PAPI_OK){
-  }
-/* Start counting events in the Event Set */
-  if (PAPI_start(EventSet) != PAPI_OK){
-  }
-/* Defined in tests/do_loops.c in the PAPI source distribution */
-//Start process
-  cout << "KIJ" << endl;
-  KIJ();
+  /* Defined in tests/do_loops.c in the PAPI source distribution */
+  //Start process
+  cout << "IJK" << endl;
+  IJK();
 
-/* Read the counting events in the Event Set */
-  if (PAPI_read(EventSet, values) != PAPI_OK) {
-  }
+  readCounter(EventSet, values);
 
+  cout << values[0] << endl;
 
-/* Create the Event Set */
-  if (PAPI_create_eventset(&EventSet) != PAPI_OK) {
-  }
-/* Add Total Instructions Executed to our Event Set */
-// Ran once for L1, L2, total cycles, floating points instructions, and total instructions. 
-  if (PAPI_add_event(EventSet, PAPI_LST_INS) != PAPI_OK){
-  }
-/* Start counting events in the Event Set */
-  if (PAPI_start(EventSet) != PAPI_OK){
-  }
-/* Defined in tests/do_loops.c in the PAPI source distribution */
-//Start process
-  cout << "KJI" << endl;
-  KJI();
+  // ------------------------------------------------------------------
 
-/* Read the counting events in the Event Set */
-  if (PAPI_read(EventSet, values) != PAPI_OK) {         
-  }
+  addAndStartCounterForInstruction(EventSet, PAPI_LST_INS);
 
-  if (PAPI_stop_counters(values, EventSet) != PAPI_OK) {
-  }
+  /* Defined in tests/do_loops.c in the PAPI source distribution */
+  //Start process
+  cout << "IJK" << endl;
+  IJK();
 
-  cout << values[0];
+  readCounter(EventSet, values);
 
+  cout << values[0] << endl;
 
+  // ------------------------------------------------------------------
+
+  addAndStartCounterForInstruction(EventSet, PAPI_LST_INS);
+
+  /* Defined in tests/do_loops.c in the PAPI source distribution */
+  //Start process
+  cout << "IJK" << endl;
+  IJK();
+
+  readCounter(EventSet, values);
+
+  cout << values[0] << endl;
+
+  // ------------------------------------------------------------------
+
+  addAndStartCounterForInstruction(EventSet, PAPI_LST_INS);
+
+  /* Defined in tests/do_loops.c in the PAPI source distribution */
+  //Start process
+  cout << "IJK" << endl;
+  IJK();
+
+  readCounter(EventSet, values);
+
+  cout << values[0] << endl;
 }
 
