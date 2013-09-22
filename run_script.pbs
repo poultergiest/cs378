@@ -1,0 +1,12 @@
+#!/bin/bash
+#$ -V
+#$ -j y
+#$ -N MissRatio.out
+#$ -o $JOB_NAME.out$JOB_ID
+#$ -pe 1way 12
+#$ -q serial
+#$ -l h_rt=00:30:00
+#$ -M "jake.wilke@gmail.com"
+#$ -m be
+
+ibrun ./MissRatio.out
