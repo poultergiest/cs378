@@ -67,13 +67,12 @@ void readCounter(int* eventSet, long_long* value) {
 
 // Prints a square matrix of size n
 void printMatrix(double** matrix, int n) {
- /* for(int i = 0; i < n; i++){
+ for(int i = 0; i < n; i++){
     for(int j = 0; j < n; j++){
      cout << matrix[i][j] << " ";
    }
    cout << endl;  
  }
- */
 }
 
 // Fills a matrix of size n with random doubles
@@ -115,7 +114,7 @@ void DeallocateMatrix(double** matrix, int n) {
 
 // TODO: Find n such that the square matrix of doubles is bigger than the size of L2 cache
 void FlushCache() {
-  int sizeOfL2InBytes = 2097152*5; // this is just a guess, approx 2mb * 5
+  int sizeOfL2InBytes = 262144; // size of l2 is 256kb
   int sizeOfL2InDoubles = sizeOfL2InBytes / sizeof(double);
   int n = (int) (sqrt(sizeOfL2InDoubles) + 1);  // should be bigger than the square root of the size of doubles to overfill l2 cache
   double** cacheSizedMatrix = AllocateMatrix(n);
@@ -144,7 +143,7 @@ void IJK(double** matrixA, double** matrixB, double** matrixC, int n) {
     }
   }
 
-  printMatrix(matrixC, n);
+  //printMatrix(matrixC, n);
 }
 
 
@@ -159,7 +158,7 @@ void IKJ(double** matrixA, double** matrixB, double** matrixC, int n) {
     }
   }
 
-  printMatrix(matrixC, n);
+  //printMatrix(matrixC, n);
 }
 
 void JIK(double** matrixA, double** matrixB, double** matrixC, int n) {
@@ -173,7 +172,7 @@ void JIK(double** matrixA, double** matrixB, double** matrixC, int n) {
     }
   }
 
-  printMatrix(matrixC, n);
+  //printMatrix(matrixC, n);
 }
 
 void JKI(double** matrixA, double** matrixB, double** matrixC, int n) {
@@ -187,7 +186,7 @@ void JKI(double** matrixA, double** matrixB, double** matrixC, int n) {
     }
   }
 
-  printMatrix(matrixC, n);
+  //printMatrix(matrixC, n);
 }
 
 void KIJ(double** matrixA, double** matrixB, double** matrixC, int n) {
@@ -201,7 +200,7 @@ void KIJ(double** matrixA, double** matrixB, double** matrixC, int n) {
     }
   }
 
-  printMatrix(matrixC, n);
+  //printMatrix(matrixC, n);
 }
 
 void KJI(double** matrixA, double** matrixB, double** matrixC, int n) {
@@ -215,7 +214,7 @@ void KJI(double** matrixA, double** matrixB, double** matrixC, int n) {
     }
   }
 
-  printMatrix(matrixC, n);
+  //printMatrix(matrixC, n);
 }
 
 void AllocateTheThreeMatrices(double*** matrixA, double*** matrixB, double*** matrixC, int n) {
@@ -243,18 +242,17 @@ int main() {
   double** matrix3;
   int EventSet=PAPI_NULL;
   long_long values[1];
-  int instruction = PAPI_L2_TCM;
+  int instruction = PAPI_FP_INS;
   initPapi(); 
 
   addAndStartCounterForInstruction(&EventSet, instruction); 
   string filename = "";
-  string instruction_name = "PAPI_L2_TCM.data";
+  string instruction_name = "_PAPI_FP_INS.ndata";
 
-  ofstream file;
-  file.open(instruction_name.c_str(), ios::out | ios::app);
+  //ofstream file;
+  //file.open(instruction_name.c_str(), ios::out | ios::app);
 
   for(int i = 1; i < 501; i++) {
-    //cout << "Matrix of size " << i << endl;
     int n = i;
  
     AllocateTheThreeMatrices(&matrix1, &matrix2, &matrix3, n);
@@ -272,18 +270,16 @@ int main() {
     /* stop measuring then print values */
 
     filename = "IJK";
-    //WriteToFile(filename+instruction_name, values[0]);
-    file << filename.c_str() << endl << values[0] << endl;
-
-    //DeallocateTheThreeMatrices(matrix1, matrix2, matrix3, n);
+    WriteToFile(filename+instruction_name, values[0]);
+    //file << filename.c_str() << endl << values[0] << endl;
 
     // ----------------------------------------
 
-    AllocateTheThreeMatrices(&matrix1, &matrix2, &matrix3, n);
+    //AllocateTheThreeMatrices(&matrix1, &matrix2, &matrix3, n);
 
     fillMatrix(matrix1, n);
     fillMatrix(matrix2, n);
-    fillMatrix(matrix3,	n);
+
     FlushCache();     
 
     /* start measuring */
@@ -294,9 +290,8 @@ int main() {
     /* stop measuring */
 
     filename = "IKJ";
-    //WriteToFile(filename+instruction_name, values[0]);
-    file << filename.c_str() << endl << values[0] << endl;
-    //DeallocateTheThreeMatrices(matrix1, matrix2, matrix3, n);
+    WriteToFile(filename+instruction_name, values[0]);
+    //file << filename.c_str() << endl << values[0] << endl;
 
     // ----------------------------------------
 
@@ -315,9 +310,8 @@ int main() {
     /* stop measuring */
 
     filename = "JIK";
-//    WriteToFile(filename+instruction_name, values[0]);
-    file << filename << endl << values[0] << endl;
-    //DeallocateTheThreeMatrices(matrix1, matrix2, matrix3, n);
+    WriteToFile(filename+instruction_name, values[0]);
+    //file << filename << endl << values[0] << endl;
 
     // ----------------------------------------
 
@@ -336,8 +330,8 @@ int main() {
     /* stop measuring */
 
     filename = "JKI";
-//    WriteToFile(filename+instruction_name, values[0]);
-    file << filename.c_str() << endl << values[0] << endl;
+    WriteToFile(filename+instruction_name, values[0]);
+//    file << filename.c_str() << endl << values[0] << endl;
     //DeallocateTheThreeMatrices(matrix1, matrix2, matrix3, n);
 
     // ----------------------------------------
@@ -357,8 +351,8 @@ int main() {
     /* stop measuring */
 
     filename = "KIJ";
-    //WriteToFile(filename+instruction_name, values[0]);
-file << filename.c_str() << endl << values[0] << endl;
+    WriteToFile(filename+instruction_name, values[0]);
+    //file << filename.c_str() << endl << values[0] << endl;
     //DeallocateTheThreeMatrices(matrix1, matrix2, matrix3, n);
 
     // ----------------------------------------
@@ -378,12 +372,12 @@ file << filename.c_str() << endl << values[0] << endl;
     /* stop measuring */
 
     filename = "KJI";
-//    WriteToFile(filename+instruction_name, values[0]);
-    file << filename.c_str() << endl << values[0] << endl;
+    WriteToFile(filename+instruction_name, values[0]);
+    //file << filename.c_str() << endl << values[0] << endl;
     DeallocateTheThreeMatrices(matrix1, matrix2, matrix3, n);
 
   }
-   file.close();
+   //file.close();
    PAPI_stop(EventSet, values);
 }
 

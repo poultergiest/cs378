@@ -9,4 +9,4 @@
 #$ -M "jake.wilke@gmail.com"
 #$ -m be
 
-ibrun ./MissRatio.out
+proj1/proj1/cs378-project1/MissRatio.out
