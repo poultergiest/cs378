@@ -11,7 +11,7 @@
 
 using namespace std;
 
-static const int __sz = 2049;
+static const int __sz = 3001;
 static const int rep = 2;
 
 double deltaTime(timeval& t1, timeval& t2) {
@@ -72,38 +72,45 @@ int main(int argc, char** argv) {
 
   srand(getpid());
 
-  for (int _sz = 2048; _sz < __sz; _sz += (rand() % (_sz*2))) {
-   
+  for (int _sz = 3000; _sz < __sz; _sz += (rand() % (_sz*2))) {
+
     AllocateTheThreeMatrices(&matrix1, &matrix2, &matrix3, _sz);
     fillMatrix(matrix1, _sz);
     fillMatrix(matrix2, _sz);    
-    std::cout << "Initializing matrices of size " << _sz << "\n";
+    cout << "Initializing matrices of size " << _sz << "\n";
     
     double time = 0;
     
+    int BLOCK_SIZE = 32;
 
-    for (int i = 0; i < rep; ++i) {
+    for (int rep_cnt = 0; rep_cnt < rep; ++rep_cnt) {
       timeval t1, t2;
       gettimeofday(&t1, 0);
-      for (i = 0; i < _sz; i++) {
-    	for (k = 0; k < _sz; k++) {
-      		for (j = 0; j < _sz; j++) {
-        		matrix3[i][j] += matrix1[i][k] * matrix2[k][j];
-      		}	
-    	} 
-  	}
+      for(int bi = 0; bi < _sz; bi += BLOCK_SIZE) {
+        for(int bj = 0; bj < _sz; bj += BLOCK_SIZE) {
+          for(int bk = 0; bk < _sz; bk += BLOCK_SIZE) {
+            for (i = bi; i < min(bi+BLOCK_SIZE-1,_sz); i++) {
+              for (j = bj; j < min(bj+BLOCK_SIZE-1,_sz); j++) {
+                 for (k = bk; k < min(bk+BLOCK_SIZE-1,_sz); k++) {
+                  matrix3[i][j] += matrix1[i][k] * matrix2[k][j];
+                }	
+              }
+            }
+          } 
+        }
+      }
       gettimeofday(&t2, 0);
       time += deltaTime(t1,t2);
     }
-    time /= 3;
-    std::cout << time << " sec " << ((double)_sz * _sz * _sz * 2) / (1000000000UL * time) << " GFLOPS\n";
+  time /= 3;
+  cout << time << " sec " << ((double)_sz * _sz * _sz * 2) / (1000000000UL * time) << " GFLOPS\n";
 
-    std::cout << "Deallocating Matrices of size " << _sz << "\n";
-    DeallocateTheThreeMatrices(matrix1, matrix2, matrix3, _sz);
+  cout << "Deallocating Matrices of size " << _sz << "\n";
+  DeallocateTheThreeMatrices(matrix1, matrix2, matrix3, _sz);
 
-  }
- 
-  std::cout << "done\n";
+}
 
-  return 0;
+cout << "done\n";
+
+return 0;
 }
