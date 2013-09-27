@@ -45,11 +45,38 @@ void fillMatrix(double** matrix, int n) {
 
   for (int i = 0; i < n; i++) {
     for(int j = 0; j < n; j++) {
-      r1 = (double)rand() / (RAND_MAX+1);
+      r1 = static_cast<double>(rand()) / (RAND_MAX+1);
       r1 *= 1000;
       matrix[i][j] = r1;
     }
   }
+}
+
+void do_nothing(int n) {
+  int sum = 0;
+  for(int j = 1; j < n; j++) 
+    if(n%j == 0) sum++;
+  if(sum > 1) cout << "Cache Flushed." << endl;
+}
+
+void FlushCache() {
+  int sizeOfL2InBytes = 262144; // size of l2 is 256kb = 262144 bytes
+  int sizeOfL2InDoubles = sizeOfL2InBytes / sizeof(double);
+  int n = (int) (sqrt(sizeOfL2InDoubles) + 1);  // should be bigger than the square root of the size of doubles to overfill l2 cache
+  double** cacheSizedMatrix = AllocateMatrix(n);
+  int sum = 0;
+  int bsum = 0;
+  for(int i = 0; i < n; i++) {
+    for(int j = 0; j < n; j++) {
+      cacheSizedMatrix[i][j] = rand() % 5;
+      sum += cacheSizedMatrix[i][j];
+    }
+    bsum += sum;
+    sum = 0;
+  }
+  bsum /= n;
+  do_nothing(bsum);
+  DeallocateMatrix(cacheSizedMatrix, n);
 }
 
 void AllocateTheThreeMatrices(double*** matrixA, double*** matrixB, double*** matrixC, int n) {
@@ -72,45 +99,62 @@ int main(int argc, char** argv) {
 
   srand(getpid());
 
-  for (int _sz = 3000; _sz < __sz; _sz += (rand() % (_sz*2))) {
-
+  for (int _sz = 1; _sz < __sz+1; _sz += (rand() % (_sz*2))) {
+    cout << "Initializing matrices of size " << _sz << endl;;
     AllocateTheThreeMatrices(&matrix1, &matrix2, &matrix3, _sz);
     fillMatrix(matrix1, _sz);
     fillMatrix(matrix2, _sz);    
-    cout << "Initializing matrices of size " << _sz << "\n";
+    fillMatrix(matrix3, _sz);
+    cout << "Flushing the cache..." << endl;
     
-    double time = 0;
     
-    int BLOCK_SIZE = 32;
+    int L1_BLOCK_SIZE = 32;
+    int L2_BLOCK_SIZE = 256;
+    int UNROLL = 4;
+    int unrolled_loops = _sz / UNROLL;
+    int cleanups       = _sz % UNROLL;
 
+    double time = 0; 
+    FlushCache();
+    cout << "Computing..." << endl;
     for (int rep_cnt = 0; rep_cnt < rep; ++rep_cnt) {
       timeval t1, t2;
       gettimeofday(&t1, 0);
-      for(int bi = 0; bi < _sz; bi += BLOCK_SIZE) {
-        for(int bj = 0; bj < _sz; bj += BLOCK_SIZE) {
-          for(int bk = 0; bk < _sz; bk += BLOCK_SIZE) {
-            for (i = bi; i < min(bi+BLOCK_SIZE-1,_sz); i++) {
-              for (j = bj; j < min(bj+BLOCK_SIZE-1,_sz); j++) {
-                 for (k = bk; k < min(bk+BLOCK_SIZE-1,_sz); k++) {
-                  matrix3[i][j] += matrix1[i][k] * matrix2[k][j];
-                }	
+      for (int b2k = 0; b2k < _sz; b2k += L2_BLOCK_SIZE) {
+        for(int b2i = 0; b2i < _sz; b2i += L2_BLOCK_SIZE) {
+          for (int b1k = b2k; b1k < min(b2k+L2_BLOCK_SIZE-1,_sz); b1k += L1_BLOCK_SIZE) {
+            for(int b1i = b2i; b1i < min(b2i+L2_BLOCK_SIZE-1,_sz); b1i += L1_BLOCK_SIZE) {
+              for(i = b1i; i < min(b1i+L1_BLOCK_SIZE-1,_sz); i++) {
+                for (k = b1k; k < min(b1k+L1_BLOCK_SIZE-1,_sz); k++) {
+                  int temp = matrix1[i][k];
+                  for (j = 0; j < unrolled_loops; j++) {
+                    matrix3[i][j]   += temp * matrix2[k][j];
+                    matrix3[i][j+1] += temp * matrix2[k][j+1];
+                    matrix3[i][j+2] += temp * matrix2[k][j+2];
+                    matrix3[i][j+3] += temp * matrix2[k][j+3];
+                  }
+                  for (j = 0; j < cleanups; j++) {
+                    matrix3[i][j]   += temp * matrix2[k][j];
+                  }
+                }
               }
             }
-          } 
+          }
         }
       }
+
       gettimeofday(&t2, 0);
       time += deltaTime(t1,t2);
     }
-  time /= 3;
-  cout << time << " sec " << ((double)_sz * _sz * _sz * 2) / (1000000000UL * time) << " GFLOPS\n";
+    time /= rep;
+    cout << time << " sec " << ((double)_sz * _sz * _sz * 2) / (1000000000UL * time) << " GFLOPS\n";
 
-  cout << "Deallocating Matrices of size " << _sz << "\n";
-  DeallocateTheThreeMatrices(matrix1, matrix2, matrix3, _sz);
 
-}
+    cout << "Deallocating Matrices of size " << _sz << endl;;
+    DeallocateTheThreeMatrices(matrix1, matrix2, matrix3, _sz);
+  }
 
-cout << "done\n";
+  cout << "done\n";
 
-return 0;
+  return 0;
 }
