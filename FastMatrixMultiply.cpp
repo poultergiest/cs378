@@ -91,28 +91,75 @@ void DeallocateTheThreeMatrices(double** matrixA, double** matrixB, double** mat
   DeallocateMatrix(matrixC, n);
 }
 
+void FastMatrixMatrixMultiply(double*** matrix1, double*** matrix2, double*** matrix3, int _sz) {
+  int i,j,k;
+  int L1_BLOCK_SIZE = 32;
+  int L2_BLOCK_SIZE = 256;
+  int UNROLL = 8;
+  int unrolled_loops = _sz / UNROLL;
+  int cleanups       = _sz % UNROLL;
+  if(_sz >= 1000) {
+    for (int b2k = 0; b2k < _sz; b2k += L2_BLOCK_SIZE) {
+      for(int b2i = 0; b2i < _sz; b2i += L2_BLOCK_SIZE) {
+        for (int b1k = b2k; b1k < min(b2k+L2_BLOCK_SIZE-1,_sz); b1k += L1_BLOCK_SIZE) {
+          for(int b1i = b2i; b1i < min(b2i+L2_BLOCK_SIZE-1,_sz); b1i += L1_BLOCK_SIZE) {
+            for(i = b1i; i < min(b1i+L1_BLOCK_SIZE-1,_sz); i++) {
+              for (k = b1k; k < min(b1k+L1_BLOCK_SIZE-1,_sz); k++) {
+                int temp = (*matrix1)[i][k];
+                for (j = 0; j < unrolled_loops; j++) {
+                  (*matrix3)[i][j]   += temp * (*matrix2)[k][j];
+                  (*matrix3)[i][j+1] += temp * (*matrix2)[k][j+1];
+                  (*matrix3)[i][j+2] += temp * (*matrix2)[k][j+2];
+                  (*matrix3)[i][j+3] += temp * (*matrix2)[k][j+3];
+                  (*matrix3)[i][j+4] += temp * (*matrix2)[k][j+4];
+                  (*matrix3)[i][j+5] += temp * (*matrix2)[k][j+5];
+                  (*matrix3)[i][j+6] += temp * (*matrix2)[k][j+6];
+                  (*matrix3)[i][j+7] += temp * (*matrix2)[k][j+7];
+                }
+                for (j = 0; j < cleanups; j++) {
+                  (*matrix3)[i][j]   += temp * (*matrix2)[k][j];
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  } else {
+    for(i = 0; i < _sz; i++) {
+      for (k = 0; k < _sz; k++) {
+        int temp = (*matrix1)[i][k];
+        for (j = 0; j < unrolled_loops; j++) {
+          (*matrix3)[i][j]   += temp * (*matrix2)[k][j];
+          (*matrix3)[i][j+1] += temp * (*matrix2)[k][j+1];
+          (*matrix3)[i][j+2] += temp * (*matrix2)[k][j+2];
+          (*matrix3)[i][j+3] += temp * (*matrix2)[k][j+3];
+          (*matrix3)[i][j+4] += temp * (*matrix2)[k][j+4];
+          (*matrix3)[i][j+5] += temp * (*matrix2)[k][j+5];
+          (*matrix3)[i][j+6] += temp * (*matrix2)[k][j+6];
+          (*matrix3)[i][j+7] += temp * (*matrix2)[k][j+7];
+        }
+        for (j = 0; j < cleanups; j++) {
+          (*matrix3)[i][j]   += temp * (*matrix2)[k][j];
+        }
+      }
+    }
+  }
+}
+
 int main(int argc, char** argv) {
   double** matrix1;
   double** matrix2;
   double** matrix3;
-  int i,j,k;
-
   srand(getpid());
 
-  for (int _sz = 1; _sz < __sz+1; _sz += (rand() % (_sz*2))) {
+  for (int _sz = 4; _sz < __sz+1; _sz += (rand() % (_sz*2))) {
     cout << "Initializing matrices of size " << _sz << endl;;
     AllocateTheThreeMatrices(&matrix1, &matrix2, &matrix3, _sz);
     fillMatrix(matrix1, _sz);
     fillMatrix(matrix2, _sz);    
     fillMatrix(matrix3, _sz);
     cout << "Flushing the cache..." << endl;
-    
-    
-    int L1_BLOCK_SIZE = 32;
-    int L2_BLOCK_SIZE = 256;
-    int UNROLL = 4;
-    int unrolled_loops = _sz / UNROLL;
-    int cleanups       = _sz % UNROLL;
 
     double time = 0; 
     FlushCache();
@@ -120,29 +167,7 @@ int main(int argc, char** argv) {
     for (int rep_cnt = 0; rep_cnt < rep; ++rep_cnt) {
       timeval t1, t2;
       gettimeofday(&t1, 0);
-      for (int b2k = 0; b2k < _sz; b2k += L2_BLOCK_SIZE) {
-        for(int b2i = 0; b2i < _sz; b2i += L2_BLOCK_SIZE) {
-          for (int b1k = b2k; b1k < min(b2k+L2_BLOCK_SIZE-1,_sz); b1k += L1_BLOCK_SIZE) {
-            for(int b1i = b2i; b1i < min(b2i+L2_BLOCK_SIZE-1,_sz); b1i += L1_BLOCK_SIZE) {
-              for(i = b1i; i < min(b1i+L1_BLOCK_SIZE-1,_sz); i++) {
-                for (k = b1k; k < min(b1k+L1_BLOCK_SIZE-1,_sz); k++) {
-                  int temp = matrix1[i][k];
-                  for (j = 0; j < unrolled_loops; j++) {
-                    matrix3[i][j]   += temp * matrix2[k][j];
-                    matrix3[i][j+1] += temp * matrix2[k][j+1];
-                    matrix3[i][j+2] += temp * matrix2[k][j+2];
-                    matrix3[i][j+3] += temp * matrix2[k][j+3];
-                  }
-                  for (j = 0; j < cleanups; j++) {
-                    matrix3[i][j]   += temp * matrix2[k][j];
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-
+      FastMatrixMatrixMultiply(&matrix1, &matrix2, &matrix3, _sz);
       gettimeofday(&t2, 0);
       time += deltaTime(t1,t2);
     }
