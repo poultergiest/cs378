@@ -98,7 +98,7 @@ void DeallocateTheThreeMatrices(double** matrixA, double** matrixB, double** mat
   DeallocateMatrix(matrixC, n);
 }
 
-/*void FastMatrixMatrixMultiply(double*** matrix1, double*** matrix2, double*** matrix3, int _sz) {
+void FastMatrixMatrixMultiply(double*** matrix1, double*** matrix2, double*** matrix3, int _sz) {
   int i,j,k;
   int L1_BLOCK_SIZE = 32;
   int L2_BLOCK_SIZE = 256;
@@ -131,9 +131,9 @@ void DeallocateTheThreeMatrices(double** matrixA, double** matrixB, double** mat
         }
       }
     }
-}*/
+}
 
-void VectorizedMatrixMatrixMultiply(double*** matrix1, double*** matrix2, double*** matrix3, int _sz) {
+/*void VectorizedMatrixMatrixMultiply(double** matrix1, double** matrix2, double** matrix3, int _sz) {
   int i,j,k;
   int L1_BLOCK_SIZE = 32;
   int L2_BLOCK_SIZE = 256;
@@ -146,17 +146,17 @@ void VectorizedMatrixMatrixMultiply(double*** matrix1, double*** matrix2, double
         for(int b1i = b2i; b1i < min(b2i+L2_BLOCK_SIZE-1,_sz); b1i += L1_BLOCK_SIZE) {
           for(i = b1i; i < min(b1i+L1_BLOCK_SIZE-1,_sz); i++) {
             for (k = b1k; k < min(b1k+L1_BLOCK_SIZE-1,_sz); k++) {
-              __m128d vtmp = _mm_load1_pd(&((*matrix2)[i][k]));
+              //__m128d vtmp = _mm_load1_pd(&(matrix2)[i][k]);
               for (j = 0; j < unrolled_loops; j++) {
                 cout << i << " HELP" << k << " " << j << endl;
-                __m128d vm0 = _mm_load_pd(&((*matrix2)[k][j])); 
-                __m128d vm1 = _mm_load_pd(&((*matrix2)[k][j+2]));
-                __m128d vm2 = _mm_load_pd(&((*matrix2)[k][j+4])); 
-                __m128d vm3 = _mm_load_pd(&((*matrix2)[k][j+6]));
-                __m128d rvm0 = _mm_load_pd(&((*matrix3)[i][j])); 
-                __m128d rvm1 = _mm_load_pd(&((*matrix3)[i][j+2]));
-                __m128d rvm2 = _mm_load_pd(&((*matrix3)[i][j+4])); 
-                __m128d rvm3 = _mm_load_pd(&((*matrix3)[i][j+6]));
+                __m128d vm0 = _mm_load_pd(&matrix2[k][j]); 
+                __m128d vm1 = _mm_load_pd(&(matrix2)[k][j+2]);
+                __m128d vm2 = _mm_load_pd(&(matrix2)[k][j+4]); 
+                __m128d vm3 = _mm_load_pd(&(matrix2)[k][j+6]);
+                __m128d rvm0 = _mm_load_pd(&(matrix3)[i][j]); 
+                __m128d rvm1 = _mm_load_pd(&(matrix3)[i][j+2]);
+                __m128d rvm2 = _mm_load_pd(&(matrix3)[i][j+4]); 
+                __m128d rvm3 = _mm_load_pd(&(matrix3)[i][j+6]);
 
                 vm0 = _mm_mul_pd(vm0, vtmp);
                 vm1 = _mm_mul_pd(vm1, vtmp);
@@ -182,25 +182,39 @@ void VectorizedMatrixMatrixMultiply(double*** matrix1, double*** matrix2, double
       }
     }
   } 
-}
+}*/
 
 /* Implementation of the first naive I, J, K matrix multiply */
-/*void VectorizedMatrixMatrixMultiply(double*** matrixA, double*** matrixB, double*** matrixC, int n) {
+void VectorizedMatrixMatrixMultiply(double** matrixA, double** matrixB, double** matrixC, int n) {
   int i,j,k;
 
   for (i = 0; i < n; i++){
-    for (j = 0; j < n; j++){
-      for (k = 0; k < n; k++){
-        (*matrixC)[i][j] += (*matrixA)[i][k] * (*matrixB)[k][j];
+    for (j = 0; j < n; j+=4){
+      __m128d vtmp = _mm_load1_pd(&(matrixA)[i][k]);
+      for (k = 0; k < n; k ++){
+        /*(matrixC)[i][j] += (matrixA)[i][k] * (matrixB)[k][j];
+        (matrixC)[i][j+1] += (matrixA)[i][k] * (matrixB)[k][j+1];
+        (matrixC)[i][j+2] += (matrixA)[i][k] * (matrixB)[k][j+2];
+        (matrixC)[i][j+3] += (matrixA)[i][k] * (matrixB)[k][j+3];*/
+        __m128d vm0 = _mm_load_pd(&(matrixB[k][j]));
+        __m128d vm1 = _mm_load_pd(&(matrixB[k][j+2]));
+        __m128d rvm0 = _mm_load_pd(&(matrixC[i][j])); 
+        __m128d rvm1 = _mm_load_pd(&(matrixC[i][j+2]));
+        vm0 = _mm_mul_pd(vm0, vtmp);
+        vm1 = _mm_mul_pd(vm1, vtmp);
+        rvm0 = _mm_add_pd(rvm0, vm0);
+        rvm1 = _mm_add_pd(rvm1, vm1);
+        _mm_store_pd(&(matrixC[i][j]), rvm0);
+        _mm_store_pd(&(matrixC[i][j+2]), rvm1);        
       }
     }
   }
-}*/
+}
 
 int main(int argc, char** argv) {
-  /*double** matrix1;
+  double** matrix1;
   double** matrix2;
-  double** matrix3;*/
+  double** matrix3;
   double** matrix11;
   double** matrix22;
   double** matrix33;
@@ -209,11 +223,11 @@ int main(int argc, char** argv) {
 
   for (int _sz = 16; _sz < __sz+1; _sz += (rand() % (_sz*2))) {
     cout << "Initializing matrices of size " << _sz << endl;;
-    //AllocateTheThreeMatrices(&matrix1, &matrix2, &matrix3, _sz);
+    AllocateTheThreeMatrices(&matrix1, &matrix2, &matrix3, _sz);
     AllocateTheThreeMatrices(&matrix11, &matrix22, &matrix33, _sz);
-    //fillMatrix(matrix1, _sz);
-    //fillMatrix(matrix2, _sz);    
-    //fillMatrix(matrix3, _sz);
+    fillMatrix(matrix1, _sz);
+    fillMatrix(matrix2, _sz);    
+    fillMatrix(matrix3, _sz);
     fillMatrix(matrix11, _sz);
     fillMatrix(matrix22, _sz);    
     fillMatrix(matrix33, _sz);
@@ -225,12 +239,12 @@ int main(int argc, char** argv) {
     for (int rep_cnt = 0; rep_cnt < rep; ++rep_cnt) {
       timeval t1, t2;
       gettimeofday(&t1, 0);
-      //FastMatrixMatrixMultiply(&matrix1, &matrix2, &matrix3, _sz);
+      FastMatrixMatrixMultiply(&matrix1, &matrix2, &matrix3, _sz);
       gettimeofday(&t2, 0);
       time += deltaTime(t1,t2);
     }
     time /= rep;
-    //printMatrix(matrix3, _sz);
+    printMatrix(matrix3, _sz);
     cout << time << " time for FastMatrixMatrixMultiply= " << ((double)_sz * _sz * _sz * 2) / (1000000000UL * time) << " GFLOPS\n";
 
     time = 0; 
@@ -239,7 +253,7 @@ int main(int argc, char** argv) {
     for (int rep_cnt = 0; rep_cnt < rep; ++rep_cnt) {
       timeval t1, t2;
       gettimeofday(&t1, 0);
-      VectorizedMatrixMatrixMultiply(&matrix11, &matrix22, &matrix33, _sz);
+      VectorizedMatrixMatrixMultiply(matrix11, matrix22, matrix33, _sz);
       gettimeofday(&t2, 0);
       time += deltaTime(t1,t2);
     }
@@ -248,7 +262,7 @@ int main(int argc, char** argv) {
     cout << time << " time for VectorizedMatrixMatrixMultiply= " << ((double)_sz * _sz * _sz * 2) / (1000000000UL * time) << " GFLOPS\n";
 
     cout << "Deallocating Matrices of size " << _sz << endl;;
-    //DeallocateTheThreeMatrices(matrix1, matrix2, matrix3, _sz);
+    DeallocateTheThreeMatrices(matrix1, matrix2, matrix3, _sz);
     DeallocateTheThreeMatrices(matrix11, matrix22, matrix33, _sz);
   }
 
