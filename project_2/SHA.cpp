@@ -7,6 +7,12 @@
 
 using namespace std;
 
+/*struct block {
+      char a[60];
+      uint32_t nonce;
+      char b[64];
+};*/
+
 timespec diff(timespec start, timespec end)
 {
 	timespec temp;
@@ -28,7 +34,7 @@ timespec diff(timespec start, timespec end)
 }*/
 
 /* Professor Implementation of SHA */
-void prof_sha256(unsigned char output[SHA256_DIGEST_LENGTH], const char* input, int len) {
+/*void prof_sha256(unsigned char output[SHA256_DIGEST_LENGTH], const char* input, int len) {
     unsigned char hash1[SHA256_DIGEST_LENGTH];
     SHA256_CTX sha256,sha256_pass2;
     SHA256_Init(&sha256);
@@ -46,11 +52,16 @@ void prof_sha256(unsigned char output[SHA256_DIGEST_LENGTH], const char* input, 
      // printf("second pass: ");
      // dumpHash(output);
      // printf("\n");
-}
+}*/
+
 
 void xsha256(unsigned char output[SHA256_DIGEST_LENGTH], const char* input, int len){
 
-  unsigned int h0, h1, h2, h3, h4, h5, h6, h7, h8;
+  char* message = new char [len];
+  //strncpy(input, message, len);
+
+
+  unsigned int h0, h1, h2, h3, h4, h5, h6, h7, h8, a, b, c, d, e, f, g, h;
   h0 = 0x6a09e667;
   h1 = 0xbb67ae85;
   h2 = 0x3c6ef372;
@@ -71,13 +82,42 @@ void xsha256(unsigned char output[SHA256_DIGEST_LENGTH], const char* input, int 
   0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
   };
 
-  int length_before_pre_processing = strlen(input) * 8;
+  //Pre-Processing
 
-  input += '1';
+  int length_before_pre_processing = strlen(message) * 8;
+
+  message += '1';
 
   while(strlen(input)*sizeof(char)*8 % 512 != 448) {
-    input += '0';
+    message += '0';
   }
+
+  //Process the message into 512-bit chunks
+  for (int i = 0; i <= strlen(input)*sizeof(char)*8; i+= 512) {
+    //create chunk;
+  }
+
+  for(/*each chunk*/int i = 0; i < 1; i++) {
+    //copy chunk into first 16 words of the message schedule array w[0..15]
+
+    for(int i = 16; i <= 63; i++) {
+
+
+    }
+    a = h0;
+    b = h1;
+    c = h2; 
+    d = h3; 
+    e = h4; 
+    f = h5;
+    g = h6;
+    h = h7;  
+
+    for (int i = 0; i <= 63; i++) {
+
+    }
+  }
+
 }
 
 
