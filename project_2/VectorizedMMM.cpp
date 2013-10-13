@@ -8,7 +8,7 @@
 
 using namespace std;
 
-static const int __sz = 17;
+static const int __sz = 64;
 static const int rep = 2;
 
 double deltaTime(timeval& t1, timeval& t2) {
@@ -48,12 +48,12 @@ void printMatrix(double** matrix, int n) {
 }
 
 void fillMatrix(double** matrix, int n) {
-  double r1;
+  //double r1;
 
   for (int i = 0; i < n; i++) {
     for(int j = 0; j < n; j++) {
-      r1 = static_cast<double>(rand()) / (RAND_MAX+1);
-      r1 *= 1000;
+      /*r1 = (rand()) / (RAND_MAX+1);
+      r1 *= 1000;*/
       matrix[i][j] = i;
     }
   }
@@ -105,32 +105,32 @@ void FastMatrixMatrixMultiply(double*** matrix1, double*** matrix2, double*** ma
   int UNROLL = 8;
   int unrolled_loops = _sz / UNROLL;
   int cleanups       = _sz % UNROLL;    
-    for (int b2k = 0; b2k < _sz; b2k += L2_BLOCK_SIZE) {
-      for(int b2i = 0; b2i < _sz; b2i += L2_BLOCK_SIZE) {
-        for (int b1k = b2k; b1k < min(b2k+L2_BLOCK_SIZE-1,_sz); b1k += L1_BLOCK_SIZE) {
-          for(int b1i = b2i; b1i < min(b2i+L2_BLOCK_SIZE-1,_sz); b1i += L1_BLOCK_SIZE) {
-            for(i = b1i; i < min(b1i+L1_BLOCK_SIZE-1,_sz); i++) {
-              for (k = b1k; k < min(b1k+L1_BLOCK_SIZE-1,_sz); k++) {
-                int temp = (*matrix1)[i][k];
-                for (j = 0; j < unrolled_loops; j++) {
-                  (*matrix3)[i][j]   += temp * (*matrix2)[k][j];
-                  (*matrix3)[i][j+1] += temp * (*matrix2)[k][j+1];
-                  (*matrix3)[i][j+2] += temp * (*matrix2)[k][j+2];
-                  (*matrix3)[i][j+3] += temp * (*matrix2)[k][j+3];
-                  (*matrix3)[i][j+4] += temp * (*matrix2)[k][j+4];
-                  (*matrix3)[i][j+5] += temp * (*matrix2)[k][j+5];
-                  (*matrix3)[i][j+6] += temp * (*matrix2)[k][j+6];
-                  (*matrix3)[i][j+7] += temp * (*matrix2)[k][j+7];
-                }
-                for (j = 0; j < cleanups; j++) {
-                  (*matrix3)[i][j]   += temp * (*matrix2)[k][j];
-                }
+  for (int b2k = 0; b2k < _sz; b2k += L2_BLOCK_SIZE) {
+    for(int b2i = 0; b2i < _sz; b2i += L2_BLOCK_SIZE) {
+      for (int b1k = b2k; b1k < min(b2k+L2_BLOCK_SIZE-1,_sz); b1k += L1_BLOCK_SIZE) {
+        for(int b1i = b2i; b1i < min(b2i+L2_BLOCK_SIZE-1,_sz); b1i += L1_BLOCK_SIZE) {
+          for(i = b1i; i < min(b1i+L1_BLOCK_SIZE-1,_sz); i++) {
+            for (k = b1k; k < min(b1k+L1_BLOCK_SIZE-1,_sz); k++) {
+              int temp = (*matrix1)[i][k];
+              for (j = 0; j < unrolled_loops; j++) {
+                (*matrix3)[i][j]   += temp * (*matrix2)[k][j];
+                (*matrix3)[i][j+1] += temp * (*matrix2)[k][j+1];
+                (*matrix3)[i][j+2] += temp * (*matrix2)[k][j+2];
+                (*matrix3)[i][j+3] += temp * (*matrix2)[k][j+3];
+                (*matrix3)[i][j+4] += temp * (*matrix2)[k][j+4];
+                (*matrix3)[i][j+5] += temp * (*matrix2)[k][j+5];
+                (*matrix3)[i][j+6] += temp * (*matrix2)[k][j+6];
+                (*matrix3)[i][j+7] += temp * (*matrix2)[k][j+7];
+              }
+              for (j = 0; j < cleanups; j++) {
+                (*matrix3)[i][j]   += temp * (*matrix2)[k][j];
               }
             }
           }
         }
       }
     }
+  }
 }
 
 /*void VectorizedMatrixMatrixMultiply(double** matrix1, double** matrix2, double** matrix3, int _sz) {
@@ -185,18 +185,18 @@ void FastMatrixMatrixMultiply(double*** matrix1, double*** matrix2, double*** ma
 }*/
 
 /* Implementation of the vectorized naive I, J, K matrix multiply */
-void VectorizedMatrixMatrixMultiply(double** matrixA, double** matrixB, double** matrixC, int n) {
+void VectorizedMatrixMatrixMultiply(double*** matrixA, double*** matrixB, double*** matrixC, int n) {
   int i,j,k;
 
   for (i = 0; i < n; i++){
-    for (j = 0; j < n; j+=4){
-      __m128d vtmp = _mm_load1_pd(&(matrixA)[i][k]);
-      for (k = 0; k < n; k ++){
-        (matrixC)[i][j] += (matrixA)[i][k] * (matrixB)[k][j];
-        (matrixC)[i][j+1] += (matrixA)[i][k] * (matrixB)[k][j+1];
-        (matrixC)[i][j+2] += (matrixA)[i][k] * (matrixB)[k][j+2];
-        (matrixC)[i][j+3] += (matrixA)[i][k] * (matrixB)[k][j+3];
-        __m128d vm0 = _mm_load_pd(&(matrixB[k][j]));
+    for (k = 0; k < n; k++){
+      //__m128d vtmp = _mm_load1_pd(&(matrixA)[i][k]);
+      for (j = 0; j < n; j+=4){
+        (*matrixC)[i][j] += (*matrixA)[i][k] * (*matrixB)[k][j];
+        (*matrixC)[i][j+1] += (*matrixA)[i][k] * (*matrixB)[k][j+1];
+        (*matrixC)[i][j+2] += (*matrixA)[i][k] * (*matrixB)[k][j+2];
+        (*matrixC)[i][j+3] += (*matrixA)[i][k] * (*matrixB)[k][j+3];
+        /*__m128d vm0 = _mm_load_pd(&(matrixB[k][j]));
         __m128d vm1 = _mm_load_pd(&(matrixB[k][j+2]));
         __m128d rvm0 = _mm_load_pd(&(matrixC[i][j])); 
         __m128d rvm1 = _mm_load_pd(&(matrixC[i][j+2]));
@@ -205,7 +205,7 @@ void VectorizedMatrixMatrixMultiply(double** matrixA, double** matrixB, double**
         rvm0 = _mm_add_pd(rvm0, vm0);
         rvm1 = _mm_add_pd(rvm1, vm1);
         _mm_store_pd(&(matrixC[i][j]), rvm0);
-        _mm_store_pd(&(matrixC[i][j+2]), rvm1);        
+        _mm_store_pd(&(matrixC[i][j+2]), rvm1);       */ 
       }
     }
   }
@@ -221,7 +221,7 @@ int main(int argc, char** argv) {
 
   srand(getpid());
 
-  for (int _sz = 16; _sz < __sz+1; _sz += (rand() % (_sz*2))) {
+  for (int _sz = __sz; _sz < __sz+1; _sz += (rand() % (_sz*2))) {
     cout << "Initializing matrices of size " << _sz << endl;;
     AllocateTheThreeMatrices(&matrix1, &matrix2, &matrix3, _sz);
     AllocateTheThreeMatrices(&matrix11, &matrix22, &matrix33, _sz);
@@ -253,7 +253,7 @@ int main(int argc, char** argv) {
     for (int rep_cnt = 0; rep_cnt < rep; ++rep_cnt) {
       timeval t1, t2;
       gettimeofday(&t1, 0);
-      VectorizedMatrixMatrixMultiply(matrix11, matrix22, matrix33, _sz);
+      VectorizedMatrixMatrixMultiply(&matrix11, &matrix22, &matrix33, _sz);
       gettimeofday(&t2, 0);
       time += deltaTime(t1,t2);
     }
