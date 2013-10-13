@@ -9,9 +9,13 @@ SOURCE = VectorizedMMM.cpp
 
 ###########################################################
 
+sha: SHA.cpp
+	clear
+	${CC} ${CFLAGS} SHA.cpp -lcrypto -lrt
+
 project: VectorizedMMM.cpp
 	clear
-	${CC} ${CFLAGS} ${SSE} -o ${TARGET} ${SOURCE}
+	${CC} ${CFLAGS} -o ${TARGET} ${SOURCE}
 
 clean:
 	rm -f *.out {TARGET}
