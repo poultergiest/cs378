@@ -47,7 +47,10 @@ timespec diff(timespec start, timespec end)
     // printf("\n");
 }*/
 
-void sha256()
+void sha256(unsigned char output[SHA256_DIGEST_LENGTH], const char* input, int len){
+    unsigned int h0, h1, h2, h3, h4, h5, h6, h7, h8;
+    
+}
 
 
 int main() {

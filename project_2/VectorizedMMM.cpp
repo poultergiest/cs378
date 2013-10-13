@@ -184,7 +184,7 @@ void FastMatrixMatrixMultiply(double*** matrix1, double*** matrix2, double*** ma
   } 
 }*/
 
-/* Implementation of the first naive I, J, K matrix multiply */
+/* Implementation of the vectorized naive I, J, K matrix multiply */
 void VectorizedMatrixMatrixMultiply(double** matrixA, double** matrixB, double** matrixC, int n) {
   int i,j,k;
 
@@ -192,10 +192,10 @@ void VectorizedMatrixMatrixMultiply(double** matrixA, double** matrixB, double**
     for (j = 0; j < n; j+=4){
       __m128d vtmp = _mm_load1_pd(&(matrixA)[i][k]);
       for (k = 0; k < n; k ++){
-        /*(matrixC)[i][j] += (matrixA)[i][k] * (matrixB)[k][j];
+        (matrixC)[i][j] += (matrixA)[i][k] * (matrixB)[k][j];
         (matrixC)[i][j+1] += (matrixA)[i][k] * (matrixB)[k][j+1];
         (matrixC)[i][j+2] += (matrixA)[i][k] * (matrixB)[k][j+2];
-        (matrixC)[i][j+3] += (matrixA)[i][k] * (matrixB)[k][j+3];*/
+        (matrixC)[i][j+3] += (matrixA)[i][k] * (matrixB)[k][j+3];
         __m128d vm0 = _mm_load_pd(&(matrixB[k][j]));
         __m128d vm1 = _mm_load_pd(&(matrixB[k][j+2]));
         __m128d rvm0 = _mm_load_pd(&(matrixC[i][j])); 
