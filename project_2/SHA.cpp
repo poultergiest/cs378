@@ -18,10 +18,6 @@ struct block {
 
 timespec diff(timespec start, timespec end);
 
-int leftrotate(int number, int rotates) {
-    return ((number << rotates) | (number >> (32-rotates)));
-}
-
 int rightrotate(int number, int rotates) {
   return ((number >> rotates) | (number << (32-rotates)));
 }
@@ -40,15 +36,15 @@ void prof_sha256(unsigned char output[SHA256_DIGEST_LENGTH], const char* input, 
     SHA256_CTX sha256,sha256_pass2;
     SHA256_Init(&sha256);
     SHA256_Update(&sha256, input, len);
-    SHA256_Final(hash1, &sha256);
-
+//    SHA256_Final(hash1, &sha256);
+    SHA256_Final(output, &sha256);
      // printf("first pass: ");
      // dumpHash(hash1);
      // printf("\n");
 
-    SHA256_Init(&sha256_pass2);
-    SHA256_Update(&sha256_pass2, hash1, SHA256_DIGEST_LENGTH);
-    SHA256_Final(output, &sha256_pass2);
+//    SHA256_Init(&sha256_pass2);
+//    SHA256_Update(&sha256_pass2, hash1, SHA256_DIGEST_LENGTH);
+//    SHA256_Final(output, &sha256_pass2);
 
      // printf("second pass: ");
      // dumpHash(output);
@@ -65,6 +61,14 @@ unsigned int k [] = {
   0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
   0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
   };
+
+
+void PrintCharArray(char* c, int len) {
+	for(int i = 0; i < len; ++i) {
+		cout << (int) c[i] << ", ";
+	}
+	cout << endl;
+}
 
 
 void xsha256(unsigned char output[SHA256_DIGEST_LENGTH], char* input, int len) {
@@ -84,17 +88,12 @@ void xsha256(unsigned char output[SHA256_DIGEST_LENGTH], char* input, int len) {
   h7 = 0x5be0cd19;
 
   //Pre-Processing
-  int length_before_pre_processing = len * 8; //128 * 8
+  int length_before_pre_processing_in_bits = len * 8;
   strncpy(data, input, len);
-  if(num_chunks == 3) {
-    data[128] = 0x80;
-    int* plen = (int*) &(data[183]);
-    *plen = length_before_pre_processing;
-  }  else {
-    data[32] = 0x80;
-    int* plen = (int*) &(data[55]);
-    *plen = length_before_pre_processing;
-  }
+  data[len] = 0x80;
+  int index = ((len / 64) + 1) * 64 - 9;
+  int* plen = (int*) &(data[index]);
+  *plen = length_before_pre_processing_in_bits;
 
   //Process the message into 512-bit chunks
   char chunks[num_chunks][64];
@@ -104,6 +103,8 @@ void xsha256(unsigned char output[SHA256_DIGEST_LENGTH], char* input, int len) {
       //create chunk;
       chunks[c][i] = data[c*num_chunks+i];
     }
+    cout << "loop: " << c << endl;
+    PrintCharArray(chunks[c], 64);
   }
 
   for(int chunk = 0; chunk < num_chunks; chunk++) {
@@ -173,21 +174,29 @@ void xsha256(unsigned char output[SHA256_DIGEST_LENGTH], char* input, int len) {
   *ptemp = h6;
   ptemp = (int*) &(output[28]);
   *ptemp = h7;
+  delete [] data;
 }
 
 void FillRandomBytes(char* dest, int num) {
   for(int i = 0; i < num; ++i) {
-    dest[i] = rand() % 256;
+    dest[i] = 1; //rand() % 256;
   }
 }
 
 
+void PrintBlock(block b) {
+	cout << "Block.a = ";
+	PrintCharArray(b.a, 60);
+	cout << "Block.nonce = " << b.nonce << endl;
+	cout << "Block.b = ";
+	PrintCharArray(b.b, 64);
+	cout << endl;
+}
+
 int main() {
   srand(0);
   unsigned char buffer[SHA256_DIGEST_LENGTH];
-  char src[128];
   printf("hash size: %zu\n", sizeof(buffer));
-  memset(src, 1, 128);
   
   timespec start,end,res;
   clock_gettime(CLOCK_MONOTONIC, &start);
@@ -195,10 +204,11 @@ int main() {
   for (int i = 0; i < 1; ++i) {
     block M;
     FillRandomBytes(M.a, 60);
-    M.nonce = i;
+    M.nonce = 16;
     FillRandomBytes(M.b, 64);
+    PrintBlock(M);
     xsha256(buffer, M.a, 128);
-    xsha256(buffer, (char*)buffer, SHA256_DIGEST_LENGTH);
+    //xsha256(buffer, (char*)buffer, SHA256_DIGEST_LENGTH);
     dumpHash(buffer);
     memset(buffer, 0, SHA256_DIGEST_LENGTH);
     prof_sha256(buffer, M.a, 128);
