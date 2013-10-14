@@ -6,6 +6,7 @@
 #include <iostream>
 #include <time.h>
 #include <stdint.h>
+#include <cstdlib>
 
 using namespace std;
 
@@ -67,8 +68,11 @@ unsigned int k [] = {
 
 
 void xsha256(unsigned char output[SHA256_DIGEST_LENGTH], char* input, int len) {
-  char* data = new char [192];
-  memset(data, 0, 192);
+  int num_chunks = 1;
+  if(len == 128) num_chunks = 3;
+
+  char* data = new char [64*num_chunks];
+  memset(data, 0, 64*num_chunks);
   unsigned int h0, h1, h2, h3, h4, h5, h6, h7, a, b, c, d, e, f, g, h;
   h0 = 0x6a09e667;
   h1 = 0xbb67ae85;
@@ -81,23 +85,28 @@ void xsha256(unsigned char output[SHA256_DIGEST_LENGTH], char* input, int len) {
 
   //Pre-Processing
   int length_before_pre_processing = len * 8; //128 * 8
-  strncpy(input, data, len);
-  data[128] = 0x01;
-  int* plen = (int*) &(data[183]);
-  cout << length_before_pre_processing << endl;
-  *plen = length_before_pre_processing;
-  return;
+  strncpy(data, input, len);
+  if(num_chunks == 3) {
+    data[128] = 0x80;
+    int* plen = (int*) &(data[183]);
+    *plen = length_before_pre_processing;
+  }  else {
+    data[32] = 0x80;
+    int* plen = (int*) &(data[55]);
+    *plen = length_before_pre_processing;
+  }
 
   //Process the message into 512-bit chunks
-  char chunks[3][64];
-  for(int c = 0; c < 3; c++) {
+  char chunks[num_chunks][64];
+
+  for(int c = 0; c < num_chunks; c++) {
     for (int i = 0; i <= 64; i++) {
       //create chunk;
-      chunks[c][i] = data[c*3+i];
+      chunks[c][i] = data[c*num_chunks+i];
     }
   }
 
-  for(int chunk = 0; chunk < 3; chunk++) {
+  for(int chunk = 0; chunk < num_chunks; chunk++) {
     //copy chunk into first 16 words of the message schedule array w[0..15]
     int w[64];
     for(int i = 0; i < 16; i++) {
@@ -166,28 +175,30 @@ void xsha256(unsigned char output[SHA256_DIGEST_LENGTH], char* input, int len) {
   *ptemp = h7;
 }
 
+void FillRandomBytes(char* dest, int num) {
+  for(int i = 0; i < num; ++i) {
+    dest[i] = rand() % 256;
+  }
+}
+
 
 int main() {
+  srand(0);
   unsigned char buffer[SHA256_DIGEST_LENGTH];
   char src[128];
   printf("hash size: %zu\n", sizeof(buffer));
-  memset(src, 0, 128);
+  memset(src, 1, 128);
   
   timespec start,end,res;
   clock_gettime(CLOCK_MONOTONIC, &start);
   
   for (int i = 0; i < 256; ++i) {
-    src[0] = i;
-    src[60] = 2; 
-    src[61] = 43;
-    src[62] = 347864578;
-    // block M;
-    // M.a = rand();
-    // M.nonce = i;
-    // M.b = rand();
-    // xsha256(buffer, (char *) M.a[0], sizeof(block));
-    // printf("testing %d, %d, %d\n", i, j, k);
-    xsha256(buffer, src, 128);
+    block M;
+    FillRandomBytes(M.a, 60);
+    M.nonce = i;
+    FillRandomBytes(M.b, 64);
+    xsha256(buffer, M.a, 128);
+    xsha256(buffer, (char*)buffer, SHA256_DIGEST_LENGTH);
     dumpHash(buffer);
   }
   clock_gettime(CLOCK_MONOTONIC, &end);
