@@ -192,13 +192,17 @@ int main() {
   timespec start,end,res;
   clock_gettime(CLOCK_MONOTONIC, &start);
   
-  for (int i = 0; i < 256; ++i) {
+  for (int i = 0; i < 1; ++i) {
     block M;
     FillRandomBytes(M.a, 60);
     M.nonce = i;
     FillRandomBytes(M.b, 64);
     xsha256(buffer, M.a, 128);
     xsha256(buffer, (char*)buffer, SHA256_DIGEST_LENGTH);
+    dumpHash(buffer);
+    memset(buffer, 0, SHA256_DIGEST_LENGTH);
+    prof_sha256(buffer, M.a, 128);
+    cout << endl;
     dumpHash(buffer);
   }
   clock_gettime(CLOCK_MONOTONIC, &end);
