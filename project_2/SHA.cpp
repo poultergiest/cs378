@@ -19,9 +19,6 @@ struct block {
 
 timespec diff(timespec start, timespec end);
 
-int rightrotate(int number, int rotates) {
-  return ((number >> rotates) | (number << (32-rotates)));
-}
 
 void dumpHash(unsigned char hash[SHA256_DIGEST_LENGTH]) {
   int i = 0;
@@ -65,10 +62,10 @@ unsigned int k [] = {
 
 
 void PrintCharArray(char* c, int len) {
-	for(int i = 0; i < len; ++i) {
-		cout << (int) c[i] << ", ";
-	}
-	cout << endl;
+  for(int i = 0; i < len; ++i) {
+    cout << (int) c[i] << ", ";
+  }
+  cout << endl;
 }
 
 
@@ -123,8 +120,8 @@ void xsha256(unsigned char output[SHA256_DIGEST_LENGTH], char* input, int len) {
     }
 
     for(int i = 16; i <= 63; i++) {
-      int s0 = rightrotate(w[i-15], 7) ^ rightrotate(w[i-15], 18) ^ w[i-15] >> 3;
-      int s1 = rightrotate(w[i-2], 17) ^ rightrotate(w[i-2], 19) ^ w[i-2] >> 10;
+      int s0 = _rotr(w[i-15], 7) ^ _rotr(w[i-15], 18) ^ w[i-15] >> 3;
+      int s1 = _rotr(w[i-2], 17) ^ _rotr(w[i-2], 19) ^ w[i-2] >> 10;
       w[i] = w[i-16] + s0 + w[i-7] + s1;
     }
     a = h0;
@@ -137,10 +134,10 @@ void xsha256(unsigned char output[SHA256_DIGEST_LENGTH], char* input, int len) {
     h = h7;  
 
     for (int i = 0; i <= 63; i++) {
-      int S1 = /*rightrotate(e, 6)*/ _rotr(e, 6) ^ rightrotate(e, 11) ^ rightrotate(e, 25);
+      int S1 = _rotr(e, 6) ^ _rotr(e, 11) ^ _rotr(e, 25);
       int ch = (e & f) ^ ((~e) & g);
       int temp1 = h + S1 + ch + k[i] + w[i];
-      int S0 = rightrotate(a, 2) ^ rightrotate(a, 13) ^ rightrotate(a, 22);
+      int S0 = _rotr(a, 2) ^ _rotr(a, 13) ^ _rotr(a, 22);
       int maj = (a & b) ^ (a & c) ^ (b & c);
       int temp2 = S0 + maj;
 
@@ -193,12 +190,12 @@ void FillRandomBytes(char* dest, int num) {
 
 
 void PrintBlock(block b) {
-	cout << "Block.a = ";
-	PrintCharArray(b.a, 60);
-	cout << "Block.nonce = " << b.nonce << endl;
-	cout << "Block.b = ";
-	PrintCharArray(b.b, 64);
-	cout << endl;
+  cout << "Block.a = ";
+  PrintCharArray(b.a, 60);
+  cout << "Block.nonce = " << b.nonce << endl;
+  cout << "Block.b = ";
+  PrintCharArray(b.b, 64);
+  cout << endl;
 }
 
 int main() {
