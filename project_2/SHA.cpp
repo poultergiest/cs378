@@ -7,6 +7,7 @@
 #include <time.h>
 #include <stdint.h>
 #include <cstdlib>
+#include "immintrin.h"
 
 using namespace std;
 
@@ -47,7 +48,7 @@ void prof_sha256(unsigned char output[SHA256_DIGEST_LENGTH], const char* input, 
 //    SHA256_Final(output, &sha256_pass2);
 
      // printf("second pass: ");
-     // dumpHash(output);
+     //dumpHash(output);
      // printf("\n");
 }
 
@@ -99,19 +100,26 @@ void xsha256(unsigned char output[SHA256_DIGEST_LENGTH], char* input, int len) {
   char chunks[num_chunks][64];
 
   for(int c = 0; c < num_chunks; c++) {
-    for (int i = 0; i <= 64; i++) {
+    for (int i = 0; i < 64; i+=4) {
       //create chunk;
       chunks[c][i] = data[c*num_chunks+i];
+      chunks[c][i+1] = data[c*num_chunks+(i+1)];
+      chunks[c][i+2] = data[c*num_chunks+(i+2)];
+      chunks[c][i+3] = data[c*num_chunks+(i+3)];
     }
-    cout << "loop: " << c << endl;
-    PrintCharArray(chunks[c], 64);
+    //cout << "loop: " << c << endl;
+    //PrintCharArray(chunks[c], 64);
   }
 
   for(int chunk = 0; chunk < num_chunks; chunk++) {
     //copy chunk into first 16 words of the message schedule array w[0..15]
     int w[64];
-    for(int i = 0; i < 16; i++) {
+    for(int i = 0; i < 16; i+=4) {
+      //unroll to visulaize vectorization
       w[i] = (int) (chunks[chunk][i*4]);
+      w[i+1] = (int)(chunks[chunk][(i+1)*4]);
+      w[i+2] = (int)(chunks[chunk][(i+2)*4]);
+      w[i+3] = (int)(chunks[chunk][(i+3)*4]);
     }
 
     for(int i = 16; i <= 63; i++) {
@@ -129,7 +137,7 @@ void xsha256(unsigned char output[SHA256_DIGEST_LENGTH], char* input, int len) {
     h = h7;  
 
     for (int i = 0; i <= 63; i++) {
-      int S1 = rightrotate(e, 6) ^ rightrotate(e, 11) ^ rightrotate(e, 25);
+      int S1 = /*rightrotate(e, 6)*/ _rotr(e, 6) ^ rightrotate(e, 11) ^ rightrotate(e, 25);
       int ch = (e & f) ^ ((~e) & g);
       int temp1 = h + S1 + ch + k[i] + w[i];
       int S0 = rightrotate(a, 2) ^ rightrotate(a, 13) ^ rightrotate(a, 22);
@@ -206,9 +214,9 @@ int main() {
     FillRandomBytes(M.a, 60);
     M.nonce = 16;
     FillRandomBytes(M.b, 64);
-    PrintBlock(M);
+    //PrintBlock(M);
     xsha256(buffer, M.a, 128);
-    //xsha256(buffer, (char*)buffer, SHA256_DIGEST_LENGTH);
+    xsha256(buffer, (char*)buffer, SHA256_DIGEST_LENGTH);
     dumpHash(buffer);
     memset(buffer, 0, SHA256_DIGEST_LENGTH);
     prof_sha256(buffer, M.a, 128);

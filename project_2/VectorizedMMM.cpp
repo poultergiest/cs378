@@ -4,11 +4,11 @@
 #include <stdlib.h>
 #include <iostream>
 #include <math.h>
-#include "emmintrin.h"
+#include "smmintrin.h"
 
 using namespace std;
 
-static const int __sz = 512;
+static const int __sz = 3072;
 static const int rep = 2;
 
 double deltaTime(timeval& t1, timeval& t2) {
@@ -98,16 +98,40 @@ void DeallocateTheThreeMatrices(double** matrixA, double** matrixB, double** mat
   DeallocateMatrix(matrixC, n);
 }
 
-void FastMatrixMatrixMultiply(double*** matrix1, double*** matrix2, double*** matrix3, int n) {
+void FastMatrixMatrixMultiply(double*** matrix1, double*** matrix2, double*** matrix3, int _sz) {
   int i,j,k;
-
-  for (i = 0; i < n; i++){
-    for (j = 0; j < n; j++){
-      for (k = 0; k < n; k++){
-        (*matrix3)[i][j] += (*matrix1)[i][k] * (*matrix2)[k][j];
+  int L1_BLOCK_SIZE = 32;
+  int L2_BLOCK_SIZE = 256;
+  int UNROLL = 8;
+  int unrolled_loops = _sz / UNROLL;
+  int cleanups       = _sz % UNROLL;
+    for (int b2k = 0; b2k < _sz; b2k += L2_BLOCK_SIZE) {
+      for(int b2i = 0; b2i < _sz; b2i += L2_BLOCK_SIZE) {
+        for (int b1k = b2k; b1k < min(b2k+L2_BLOCK_SIZE-1,_sz); b1k += L1_BLOCK_SIZE) {
+          for(int b1i = b2i; b1i < min(b2i+L2_BLOCK_SIZE-1,_sz); b1i += L1_BLOCK_SIZE) {
+            for(i = b1i; i < min(b1i+L1_BLOCK_SIZE-1,_sz); i++) {
+              for (k = b1k; k < min(b1k+L1_BLOCK_SIZE-1,_sz); k++) {
+                int temp = (*matrix1)[i][k];
+                //for (j = 0; j < unrolled_loops; j++) {
+                for (j = 0; j < _sz; j+=8){
+                  (*matrix3)[i][j]   += temp * (*matrix2)[k][j];
+                  (*matrix3)[i][j+1] += temp * (*matrix2)[k][j+1];
+                  (*matrix3)[i][j+2] += temp * (*matrix2)[k][j+2];
+                  (*matrix3)[i][j+3] += temp * (*matrix2)[k][j+3];
+                  (*matrix3)[i][j+4] += temp * (*matrix2)[k][j+4];
+                  (*matrix3)[i][j+5] += temp * (*matrix2)[k][j+5];
+                  (*matrix3)[i][j+6] += temp * (*matrix2)[k][j+6];
+                  (*matrix3)[i][j+7] += temp * (*matrix2)[k][j+7];
+                }
+                for (j = 0; j < cleanups; j++) {
+                  (*matrix3)[i][j]   += temp * (*matrix2)[k][j];
+                }
+              }
+            }
+          }
+        }
       }
     }
-  }
 }
 
 void VectorizedMatrixMatrixMultiply(double*** matrix1, double*** matrix2, double*** matrix3, int _sz) {
@@ -120,7 +144,7 @@ void VectorizedMatrixMatrixMultiply(double*** matrix1, double*** matrix2, double
   int UNROLL = 8;
   int unrolled_loops = _sz / UNROLL;
   int cleanups       = _sz % UNROLL;
-  if(_sz >= 512) {
+  //if(_sz >= 512) {
     for (int b2k = 0; b2k < _sz; b2k += L2_BLOCK_SIZE) {
       for(int b2i = 0; b2i < _sz; b2i += L2_BLOCK_SIZE) {
         for (int b1k = b2k; b1k < min(b2k+L2_BLOCK_SIZE-1,_sz); b1k += L1_BLOCK_SIZE) {
@@ -146,7 +170,14 @@ void VectorizedMatrixMatrixMultiply(double*** matrix1, double*** matrix2, double
                   rvm0 = _mm_add_pd(rvm0, vm0);
                   rvm1 = _mm_add_pd(rvm1, vm1);
                   rvm2 = _mm_add_pd(rvm2, vm2);
-                  rvm3 = _mm_add_pd(rvm3, vm3);
+                  /*rvm3 = _mm_add_pd(rvm3, vm3);
+                  rvm0 = _mm_fmadd_pd(vm0, vtmp, rvm0);
+                  rvm1 = _mm_fmadd_pd(vm1, vtmp, rvm1);
+                  rvm2 = _mm_fmadd_pd(vm2, vtmp, rvm2);
+                  rvm3 = _mm_fmadd_pd(vm3, vtmp, rvm3);*/
+                  
+
+
                   
                   _mm_store_pd(&(matrixC[i][j]), rvm0);
                   _mm_store_pd(&(matrixC[i][j+2]), rvm1);
@@ -154,7 +185,7 @@ void VectorizedMatrixMatrixMultiply(double*** matrix1, double*** matrix2, double
                   _mm_store_pd(&(matrixC[i][j+6]), rvm3);
                 }
                 for (j = 0; j < cleanups; j++) {
-                  (*matrixC)[i][j]   += temp * (*matrixB)[k][j];
+                  //(*matrixC)[i][j]   += temp * (*matrixB)[k][j];
                 }
               }
             }
@@ -162,7 +193,7 @@ void VectorizedMatrixMatrixMultiply(double*** matrix1, double*** matrix2, double
         }
       }
     }
-  } else {
+  /*} else {
     for (i = 0; i < _sz; i++){
       for (k = 0; k < _sz; k++){
         __m128d vtmp = _mm_load1_pd(&(matrixA[i][k]));
@@ -181,7 +212,7 @@ void VectorizedMatrixMatrixMultiply(double*** matrix1, double*** matrix2, double
         }
       }
     }
-  }
+  }*/
 }
 
 /* Implementation of the vectorized naive I, J, K matrix multiply */
@@ -221,7 +252,7 @@ int main(int argc, char** argv) {
 
   srand(getpid());
 
-  for (int _sz = __sz; _sz < __sz+1; _sz += (rand() % (_sz*2))) {
+  for (int _sz = 32; _sz < __sz+1; _sz *= 2/*(rand() % (_sz*2))*/) {
     cout << "Initializing matrices of size " << _sz << endl;;
     AllocateTheThreeMatrices(&matrix1, &matrix2, &matrix3, _sz);
     AllocateTheThreeMatrices(&matrix11, &matrix22, &matrix33, _sz);
@@ -244,7 +275,7 @@ int main(int argc, char** argv) {
       time += deltaTime(t1,t2);
     }
     time /= rep;
-    printMatrix(matrix3, _sz);
+    //printMatrix(matrix3, _sz);
     cout << time << " time for FastMatrixMatrixMultiply= " << ((double)_sz * _sz * _sz * 2) / (1000000000UL * time) << " GFLOPS\n";
 
     time = 0; 
@@ -258,7 +289,7 @@ int main(int argc, char** argv) {
       time += deltaTime(t1,t2);
     }
     time /= rep;
-    printMatrix(matrix33, _sz);
+    //printMatrix(matrix33, _sz);
     cout << time << " time for VectorizedMatrixMatrixMultiply= " << ((double)_sz * _sz * _sz * 2) / (1000000000UL * time) << " GFLOPS\n";
 
     cout << "Deallocating Matrices of size " << _sz << endl;

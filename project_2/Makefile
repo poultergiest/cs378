@@ -15,7 +15,7 @@ sha: SHA.cpp
 
 project: VectorizedMMM.cpp
 	clear
-	${CC} ${CFLAGS} -o ${TARGET} ${SOURCE}
+	${CC} ${CFLAGS} -o ${TARGET} -ffast-math -fno-tree-vectorize ${SOURCE}
 
 clean:
 	rm -f *.out {TARGET}
