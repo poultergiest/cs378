@@ -206,12 +206,11 @@ int main() {
   timespec start,end,res;
   clock_gettime(CLOCK_MONOTONIC, &start);
   
-  for (int i = 0; i < 1; ++i) {
+  for (uint32_t i = 0; i < ~0; ++i) {
     block M;
     FillRandomBytes(M.a, 60);
-    M.nonce = 16;
+    M.nonce = i;
     FillRandomBytes(M.b, 64);
-    //PrintBlock(M);
     xsha256(buffer, M.a, 128);
     xsha256(buffer, (char*)buffer, SHA256_DIGEST_LENGTH);
     dumpHash(buffer);
