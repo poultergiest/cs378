@@ -14,7 +14,8 @@ bool doExit = false;
 
 using namespace std;
 
-#define HOOKES_K -2
+#define HOOKES_K -1
+#define COULOMBS_K 50
 
 class COORD {
 public:
@@ -134,24 +135,49 @@ COORD hookes_force(COORD src, COORD dest) {
 
 	int d = gdistance(src, dest);
 
-	res.x = -1 * HOOKES_K * (dest.x - src.x) / d;
-	res.y = -1 * HOOKES_K * (dest.y - src.y) / d;
+	if(d > 20) {
+		res.y = -1 * (HOOKES_K * (dest.y - src.y)) / d;
+		res.x = -1 * (HOOKES_K * (dest.x - src.x)) / d;
+	}
 
 	return res;
 }
 
-void apply_hookes(AdjGraph& g) {
+COORD coulombs_force(COORD src, COORD dest) {
+	COORD res(0,0);
+
+	//k qq /r*r
+	int d = gdistance(src, dest);
+	int rr = d*d;
+
+	if(rr != 0 && d < HOOKES_K) {
+		res.x = HOOKES_K * (dest.x - src.x) * (dest.x - src.x) / rr;
+		res.y = HOOKES_K * (dest.y - src.y) * (dest.y - src.y) / rr;
+	}
+
+	return res;
+}
+
+void apply_forces(AdjGraph& g) {
+	vector<COORD> fs;
 	for(int i = 0; i < g.getSize(); ++i) {
 		COORD src = g.getCoord(i);
 		vector<int> neighbors = g.getNeighbors(i);
 		for(int j = 0; j < (int) neighbors.size(); ++j) {
 			COORD dest = g.getCoord(neighbors[j]);
 			COORD hookes = hookes_force(src, dest);
-			g.setCoord(i, src.x + hookes.x, src.y + hookes.y);
+			COORD coulombs = coulombs_force(src, dest);
+			COORD total_force(hookes.x+coulombs.x, hookes.y+coulombs.y);
+			fs.push_back(total_force);
 		}
 	}
-}
 
+	for(int n = 0; n < g.getSize(); ++n) {
+		COORD src = g.getCoord(n);
+		COORD force = fs[n];
+		g.setCoord(n, src.x + force.x, src.y + force.y);
+	}
+}
 
 //Perform graph layout, Daniel Tunkelang style
 static bool init_app(const char * name, SDL_Surface * icon, uint32_t flags)
@@ -239,23 +265,25 @@ int main(int argc, char **argv) {
 
 	init_data(buffer);
 
-	int rs = 3;
+	int rs = 2;
 	AdjGraph ring(0);
 	ring.addNode(100, 100);
-	ring.addNode(200, 100);
 	ring.addNode(200, 200);
+	//ring.addNode(200, 200);
 	
 	for(int n = 0; n < rs-1; ++n) {
 		ring.setEdge(n, n+1, 1);
+		ring.setEdge(n+1, n, 1);
 	}
 	ring.setEdge(rs-1, 0, 1);
+	ring.setEdge(0, rs-1, 1);
 
 	ring.print();
 
 	while (!doExit) {
 		//apply laws
 		//ring.printCoords();
-		apply_hookes(ring);
+		apply_forces(ring);
 		//cout << endl;
 		//ring.printCoords();
 		//render
