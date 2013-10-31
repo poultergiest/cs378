@@ -14,8 +14,8 @@ bool doExit = false;
 
 using namespace std;
 
-#define HOOKES_K -1
-#define COULOMBS_K 50
+#define HOOKES_K  2
+#define COULOMBS_K 15
 
 class COORD {
 public:
@@ -81,7 +81,6 @@ public:
 	vector<int> getNeighbors(int node) {
 		vector<int> n;
 		for(int i = 0; i < _size; ++i) {
-			if(node == i) continue;
 			if(_g[node][i]) {
 				n.push_back(i);
 			}
@@ -135,9 +134,9 @@ COORD hookes_force(COORD src, COORD dest) {
 
 	int d = gdistance(src, dest);
 
-	if(d > 20) {
-		res.y = -1 * (HOOKES_K * (dest.y - src.y)) / d;
-		res.x = -1 * (HOOKES_K * (dest.x - src.x)) / d;
+	if(d > 100) {
+		res.y =  (HOOKES_K * (dest.y - src.y)) / d;
+		res.x =  (HOOKES_K * (dest.x - src.x)) / d;
 	}
 
 	return res;
@@ -150,9 +149,9 @@ COORD coulombs_force(COORD src, COORD dest) {
 	int d = gdistance(src, dest);
 	int rr = d*d;
 
-	if(rr != 0 && d < HOOKES_K) {
-		res.x = HOOKES_K * (dest.x - src.x) * (dest.x - src.x) / rr;
-		res.y = HOOKES_K * (dest.y - src.y) * (dest.y - src.y) / rr;
+	if(rr != 0 && d < 200) {
+		res.x = COULOMBS_K * COULOMBS_K * (dest.x - src.x) / (rr);
+		res.y = COULOMBS_K * COULOMBS_K * (dest.y - src.y) / (rr);
 	}
 
 	return res;
@@ -163,18 +162,25 @@ void apply_forces(AdjGraph& g) {
 	for(int i = 0; i < g.getSize(); ++i) {
 		COORD src = g.getCoord(i);
 		vector<int> neighbors = g.getNeighbors(i);
+		COORD total_force(0,0);
 		for(int j = 0; j < (int) neighbors.size(); ++j) {
 			COORD dest = g.getCoord(neighbors[j]);
 			COORD hookes = hookes_force(src, dest);
 			COORD coulombs = coulombs_force(src, dest);
-			COORD total_force(hookes.x+coulombs.x, hookes.y+coulombs.y);
-			fs.push_back(total_force);
+			/*coulombs.x = 0;
+			coulombs.y = 0;*/
+			total_force.x += hookes.x + coulombs.x;
+			total_force.y += hookes.y + coulombs.y; 
+			
 		}
+		fs.push_back(total_force);
 	}
 
 	for(int n = 0; n < g.getSize(); ++n) {
+
 		COORD src = g.getCoord(n);
 		COORD force = fs[n];
+		COORD zero(0,0);
 		g.setCoord(n, src.x + force.x, src.y + force.y);
 	}
 }
@@ -268,8 +274,9 @@ int main(int argc, char **argv) {
 	int rs = 2;
 	AdjGraph ring(0);
 	ring.addNode(100, 100);
-	ring.addNode(200, 200);
-	//ring.addNode(200, 200);
+	ring.addNode(150, 100);
+/*	ring.addNode(202, 202);
+	ring.addNode(103, 203);*/
 	
 	for(int n = 0; n < rs-1; ++n) {
 		ring.setEdge(n, n+1, 1);
@@ -279,7 +286,10 @@ int main(int argc, char **argv) {
 	ring.setEdge(0, rs-1, 1);
 
 	ring.print();
-
+	for (int i = 0; i < 10000; ++i)
+	{
+		apply_forces(ring);
+	}
 	while (!doExit) {
 		//apply laws
 		//ring.printCoords();
