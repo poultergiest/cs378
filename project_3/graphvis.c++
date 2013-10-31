@@ -166,9 +166,9 @@ void apply_forces(AdjGraph& g) {
 		for(int j = 0; j < (int) neighbors.size(); ++j) {
 			COORD dest = g.getCoord(neighbors[j]);
 			COORD hookes = hookes_force(src, dest);
-			COORD coulombs = coulombs_force(src, dest);
-			/*coulombs.x = 0;
-			coulombs.y = 0;*/
+			COORD coulombs = coulombs_force(dest, src);
+			// hookes.x = 0;
+			// hookes.y = 0;
 			total_force.x += hookes.x + coulombs.x;
 			total_force.y += hookes.y + coulombs.y; 
 			
@@ -271,12 +271,12 @@ int main(int argc, char **argv) {
 
 	init_data(buffer);
 
-	int rs = 2;
+	int rs = 4;
 	AdjGraph ring(0);
 	ring.addNode(100, 100);
-	ring.addNode(150, 100);
-/*	ring.addNode(202, 202);
-	ring.addNode(103, 203);*/
+	ring.addNode(120, 100);
+	ring.addNode(125, 122);
+	ring.addNode(130, 103);
 	
 	for(int n = 0; n < rs-1; ++n) {
 		ring.setEdge(n, n+1, 1);
@@ -288,7 +288,7 @@ int main(int argc, char **argv) {
 	ring.print();
 	for (int i = 0; i < 10000; ++i)
 	{
-		apply_forces(ring);
+		//apply_forces(ring);
 	}
 	while (!doExit) {
 		//apply laws
