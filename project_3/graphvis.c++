@@ -58,6 +58,7 @@ public:
 
 	void setEdge(int node1, int node2, bool value) {
 		_g[node1][node2] = value;
+		_g[node2][node1] = value;
 	}
 
 	COORD getCoord(int node) {
@@ -161,27 +162,31 @@ void apply_forces(AdjGraph& g) {
 	vector<COORD> fs;
 	for(int i = 0; i < g.getSize(); ++i) {
 		COORD src = g.getCoord(i);
-		vector<int> neighbors = g.getNeighbors(i);
 		COORD total_force(0,0);
-		for(int j = 0; j < (int) neighbors.size(); ++j) {
-			COORD dest = g.getCoord(neighbors[j]);
-			COORD hookes = hookes_force(src, dest);
+		for(int j = 0; j < g.getSize(); ++j) {
+			if(i == j) continue;
+			COORD dest = g.getCoord(j);
+			// if connected, apply hookes.
+			if(g.getEdge(i, j)) {
+				COORD hookes = hookes_force(src, dest);
+				total_force.x += hookes.x;
+				total_force.y += hookes.y;
+			}
+			// always apply coulombs
 			COORD coulombs = coulombs_force(dest, src);
-			// hookes.x = 0;
-			// hookes.y = 0;
-			total_force.x += hookes.x + coulombs.x;
-			total_force.y += hookes.y + coulombs.y; 
-			
+			total_force.x += coulombs.x;
+			total_force.y += coulombs.y;
 		}
 		fs.push_back(total_force);
 	}
 
 	for(int n = 0; n < g.getSize(); ++n) {
-
 		COORD src = g.getCoord(n);
 		COORD force = fs[n];
 		COORD zero(0,0);
-		g.setCoord(n, src.x + force.x, src.y + force.y);
+		if(gdistance(zero, force) > 1) {
+			g.setCoord(n, src.x + force.x, src.y + force.y);
+		}
 	}
 }
 
@@ -271,19 +276,36 @@ int main(int argc, char **argv) {
 
 	init_data(buffer);
 
-	int rs = 4;
+	int rs = 9;
 	AdjGraph ring(0);
-	ring.addNode(100, 100);
-	ring.addNode(120, 100);
-	ring.addNode(125, 122);
-	ring.addNode(130, 103);
+	//center
+	ring.addNode(WIDTH / 2, HEIGHT / 2);
+
+	//up
+	ring.addNode(WIDTH / 2, (HEIGHT / 2) - 10);
+	ring.setEdge(0, 1, 1);
+	ring.addNode(WIDTH / 2, (HEIGHT / 2) - 20);
+	ring.setEdge(1, 2, 1);
+
+	//down
+	ring.addNode(WIDTH / 2, (HEIGHT / 2) + 10);
+	ring.setEdge(0, 3, 1);
+	ring.addNode(WIDTH / 2, (HEIGHT / 2) + 20);
+	ring.setEdge(3, 4, 1);
+
+	//left
+	ring.addNode((WIDTH / 2)-10, HEIGHT / 2);
+	ring.setEdge(0, 5, 1);
+	ring.addNode((WIDTH / 2)-20, HEIGHT / 2);
+	ring.setEdge(5, 6, 1);
+
+	//right
+	ring.addNode((WIDTH / 2)+20, HEIGHT / 2);
+	ring.setEdge(0, 7, 1);
+	ring.addNode((WIDTH / 2)+10, HEIGHT / 2);
+	ring.setEdge(7, 8, 1);
+
 	
-	for(int n = 0; n < rs-1; ++n) {
-		ring.setEdge(n, n+1, 1);
-		ring.setEdge(n+1, n, 1);
-	}
-	ring.setEdge(rs-1, 0, 1);
-	ring.setEdge(0, rs-1, 1);
 
 	ring.print();
 	for (int i = 0; i < 10000; ++i)
@@ -303,3 +325,13 @@ int main(int argc, char **argv) {
 	}
 	return 0;
 }
+
+
+/*
+//for a ring
+for(int n = 0; n < rs-1; ++n) {
+		ring.setEdge(n, n+1, 1);
+	}
+	ring.setEdge(rs-1, 0, 1);
+
+*/

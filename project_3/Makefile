@@ -10,13 +10,13 @@ SOURCE2 = fastgraphvis.c++
 
 ###########################################################
 
-graphvis: ${SOURCE}
-	clear
-	${CC} ${CFLAGS} -o ${TARGET} ${SOURCE} -lrt -lSDL
-
 fastgraph: ${SOURCE2}
 	clear
 	${CC} ${CFLAGS} -o ${TARGET2} ${SOURCE2} -lrt -lSDL
+
+graphvis: ${SOURCE}
+	clear
+	${CC} ${CFLAGS} -o ${TARGET} ${SOURCE} -lrt -lSDL
 
 clean:
 	rm -f *.out {TARGET} {TARGET2}
