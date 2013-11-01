@@ -31,6 +31,26 @@ public:
 	int y;
 };
 
+struct FORCE {
+	FORCE() {
+		x = 0;
+		y = 0;
+	}
+	FORCE(int i, int j) {
+		x = i;
+		y = j;
+	}
+	int x;
+	int y;
+};
+
+class Node {
+public:
+	int label;
+	COORD pos;
+	FORCE force;
+};
+
 // insert graph
 class AdjGraph {
 	int _size;
