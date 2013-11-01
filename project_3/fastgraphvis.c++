@@ -42,6 +42,7 @@ public:
 		_size = n;
 		_g.resize(_size);
 		label.resize(_size);
+		node_pos.resize(_size);
 		for(int i = 0; i < _size; ++i) {
 			_g[i].resize(_size);
 			label[i] = INT_MAX;
@@ -72,6 +73,10 @@ public:
 	void setCoord(int node, int i, int j) {
 		node_pos[node].x = i;
 		node_pos[node].y = j;
+	}
+
+	vector<COORD> GetNodePos() {  // TODO: DELETE THIS
+		return node_pos;
 	}
 
 	void addNode(int x, int y) {
@@ -134,6 +139,7 @@ int gdistance(COORD n1, COORD n2) {
 }
 
 class QTree {
+public:
 	QTree* q1;
 	QTree* q2;
 	QTree* q3;
@@ -159,17 +165,102 @@ class QTree {
 		level = l;
 		for(int i = 0; i < (int) p.size(); ++i) {
 			if(p[i].x >= x && p[i].y >= y && p[i].x < x + w && p[i].y < y + h) {
-				points.push_back(p);
+				points.push_back(p[i]);
 			}
 		}
 		if(points.size() > 1) {
-			half_width = w / 2;
-			half_height = h / 2;
-			*q1 = new QTree(pos.x + half_width, pos.y, half_width, half_height, l+1, points);
-			*q2 = new QTree(pos.x, pos.y, half_width, half_height, l+1, points);
-			*q3 = new QTree(pos.x, pos.y + half_height, half_width, half_height, l+1, points);
-			*q4 = new QTree(pos.x+ half_width, pos.y + half_height, half_width, half_height, l+1, points);
+			int half_width = w / 2;
+			int half_height = h / 2;
+			q1 = new QTree(pos.x + half_width, pos.y, half_width, half_height, l+1, points);
+			if (q1->getSize() == 0) {
+				delete q1;
+				q1 = NULL;
+			}
+			q2 = new QTree(pos.x, pos.y, half_width, half_height, l+1, points);
+			if (q2->getSize() == 0) {
+				delete q2;
+				q2 = NULL;
+			}
+			q3 = new QTree(pos.x, pos.y + half_height, half_width, half_height, l+1, points);
+			if (q3->getSize() == 0) {
+				delete q3;
+				q3 = NULL;
+			}
+			q4 = new QTree(pos.x+ half_width, pos.y + half_height, half_width, half_height, l+1, points);
+			if (q4->getSize() == 0) {
+				delete q4;
+				q4 = NULL;
+			}
 		}
+	}
+
+	~QTree() {
+		if(q1 != NULL) {
+			delete q1;
+		}
+		if(q2 != NULL) {
+			delete q2;
+		}
+		if(q3 != NULL) {
+			delete q3;
+		}
+		if(q4 != NULL) {
+			delete q4;
+		}
+	}
+
+	// approximatedNode computeApproximatedNode() {
+	// 	node n1; 
+	// 	if(q1 != null);
+	// 	getApproximatedNode(q1);
+	// 	getApproximatedNode(q2);
+	// 	getApproximatedNode(q3);
+	// 	getApproximatedNode(q4);
+		
+	// 	approximatedNode = averageNode(q1,q2, q3, q4);
+	// 	return approximatedNode;
+	// }
+
+	// Node GetNode() {
+	// 	return computeApproximatedNode();
+	// }
+
+	// void computeCuolombs(vector<forces> forces) { // vector of size = total number of nodes
+
+	// }
+
+	// void computeCuolombsForce(node n1, node n2) {
+
+	// }
+
+	void DrawQTree(struct rgbData data[][WIDTH]) {
+		rgbData green = {0,255,0};
+		//draw self.
+		drawline(data, pos.x, pos.y, pos.x+width, pos.y, green);
+		drawline(data, pos.x, pos.y, pos.x, pos.y+height, green);
+		drawline(data, pos.x+width, pos.y, pos.x+width, pos.y+height, green);
+		drawline(data, pos.x, pos.y+height, pos.x+width, pos.y+height, green);
+
+		//draw children;
+		if(q1 != NULL) {
+			q1->DrawQTree(data);
+		}
+
+		if(q2 != NULL) {
+			q2->DrawQTree(data);
+		}
+
+		if(q3 != NULL) {
+			q3->DrawQTree(data);
+		}
+
+		if(q4 != NULL) {
+			q4->DrawQTree(data);
+		}
+	}
+
+	int getSize() {
+		return (int) points.size();
 	}
 
 };
@@ -266,7 +357,7 @@ static int filter(const SDL_Event * event)
 	return event->type == SDL_QUIT;
 }
 
-static bool renderGraph(struct rgbData data[][WIDTH], unsigned width, unsigned height, AdjGraph& g, int which, bool forces)
+static bool renderGraph(struct rgbData data[][WIDTH], unsigned width, unsigned height, AdjGraph& g, QTree& qt, int which, bool forces)
 {
 	for(SDL_Event event; SDL_PollEvent(&event);)
 		if(event.type == SDL_QUIT) return 0;
@@ -278,7 +369,16 @@ static bool renderGraph(struct rgbData data[][WIDTH], unsigned width, unsigned h
 	rgbData blue = {0,0,255};
 	rgbData color = {200,70,110};
 
-	colorBG(data, white); 
+	colorBG(data, black); 
+	// DRAW EDGES
+	// for(int i = 0; i < g.getSize(); ++i) {
+	// 	COORD src = g.getCoord(i);
+	// 	vector<int> neighbors = g.getNeighbors(i);
+	// 	for(int j = 0; j < (int) neighbors.size(); ++j) {
+	// 		COORD dest = g.getCoord(neighbors[j]);
+	// 		drawline(data, src.x, src.y, dest.x, dest.y, white);
+	// 	}
+	// }
 
 	// DRAW NODES
 	for(int i = 0; i < g.getSize(); ++i) {
@@ -286,19 +386,26 @@ static bool renderGraph(struct rgbData data[][WIDTH], unsigned width, unsigned h
 		drawcircle(data, node.x, node.y, 10, red);
 		char buffer[4];
 		snprintf(buffer, sizeof(buffer), "%d", i);
-		drawstring(data, node.x-2, node.y-2, buffer, black);
+		drawstring(data, node.x-2, node.y-2, buffer, white);
 	}
 
-	// DRAW EDGES
-	for(int i = 0; i < g.getSize(); ++i) {
-		COORD src = g.getCoord(i);
-		vector<int> neighbors = g.getNeighbors(i);
-		for(int j = 0; j < (int) neighbors.size(); ++j) {
-			COORD dest = g.getCoord(neighbors[j]);
-			drawline(data, src.x, src.y, dest.x, dest.y, black);
-		}
-	}
+
+	qt.DrawQTree(data);
 	return 1;
+}
+
+AdjGraph setupHalfConnectedGraph(int s) {
+	AdjGraph g(s);
+	int size = s;
+	int half = (size / 2) + 1;
+	for(int i = 0; i < size; ++i) {
+		g.setCoord(i, rand()%WIDTH, rand()%HEIGHT);
+		for(int j = 0; j < half; ++j) {
+			g.setEdge(i, rand() % size, 1);
+		}
+		g.setEdge(i,i,0);
+	}
+	return g;
 }
 
 int main(int argc, char **argv) {
@@ -320,9 +427,11 @@ int main(int argc, char **argv) {
 
 	init_data(buffer);
 
-	int rs = 9;
-	AdjGraph ring(0);
-	//center
+	int rs = 50;
+	AdjGraph ring(rs);
+	ring = setupHalfConnectedGraph(rs);
+
+	/*//center
 	ring.addNode(WIDTH / 2, HEIGHT / 2);
 
 	//up
@@ -347,11 +456,11 @@ int main(int argc, char **argv) {
 	ring.addNode((WIDTH / 2)+20, HEIGHT / 2);
 	ring.setEdge(0, 7, 1);
 	ring.addNode((WIDTH / 2)+10, HEIGHT / 2);
-	ring.setEdge(7, 8, 1);
+	ring.setEdge(7, 8, 1);*/
 
-	
+	QTree* qt = new QTree(0,0, 1024, 1024, 1, ring.GetNodePos());
 
-	ring.print();
+	//ring.print();
 	for (int i = 0; i < 10000; ++i)
 	{
 		//apply_forces(ring);
@@ -360,10 +469,12 @@ int main(int argc, char **argv) {
 		//apply laws
 		//ring.printCoords();
 		apply_forces(ring);
+		delete qt;
+		qt = new QTree(0,0, 1024, 1024, 1, ring.GetNodePos());
 		//cout << endl;
 		//ring.printCoords();
 		//render
-		renderGraph(buffer, WIDTH, HEIGHT, ring, 0, false);
+		renderGraph(buffer, WIDTH, HEIGHT, ring, *qt, 0, false);
 		render(data_sf);
 		SDL_Delay(1000/30);
 	}
