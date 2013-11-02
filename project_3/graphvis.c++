@@ -17,6 +17,7 @@ using namespace std;
 #define HOOKES_K  2
 #define COULOMBS_K 15
 
+
 class COORD {
 public:
 	COORD() {
@@ -30,58 +31,102 @@ public:
 	int x;
 	int y;
 };
+typedef COORD FORCE;
+
+class Node {
+public:
+	Node() {
+		label = 0;
+	}
+
+	Node(int l, int x, int y, int fx, int fy) {
+		label = l;
+		pos.x = x;
+		pos.y = y;
+		force.x = fx;
+		force.y = fy;
+	}
+
+	Node(const Node& cpy) {
+		label = -1;
+		pos.x = cpy.pos.x;
+		pos.y = cpy.pos.y;
+		force.x = cpy.force.x;
+		force.y = cpy.force.y;
+	}
+	int label;
+	COORD pos;
+	FORCE force;
+};
 
 // insert graph
 class AdjGraph {
 	int _size;
 	vector<vector<bool> > _g;
-	vector<int> label;
-	vector<COORD> node_pos;
+	vector<Node> _nodes;
 public:
 	AdjGraph(int n) {
 		_size = n;
+		_nodes.resize(_size);
 		_g.resize(_size);
-		label.resize(_size);
-		node_pos.resize(_size);
+
 		for(int i = 0; i < _size; ++i) {
 			_g[i].resize(_size);
-			label[i] = INT_MAX;
+			_nodes[i].label = i;
 		}
 	}
 
-	void setLabel(int node, int value) {
-		label[node] = value;
+	Node& getNode(int node) {
+		return _nodes[node];
 	}
 
-	int getLabel(int node) {
-		return label[node];
+	vector<Node*> GetNodePointers() {
+		vector<Node*> ret;
+
+		for(int i =0; i < _size; ++i) {
+			ret.push_back(&(_nodes[i]));
+		}
+
+		return ret;
 	}
 
 	bool getEdge(int node1, int node2) {
 		return _g[node1][node2];
 	}
 
-	void setEdge(int node1, int node2, bool value) {
+	void setEdge(int node1, int node2, bool value) {  // makes undirected graphs
 		_g[node1][node2] = value;
 		_g[node2][node1] = value;
 	}
 
 	COORD getCoord(int node) {
-		return node_pos[node];
+		return _nodes[node].pos;
 	}
 
 	void setCoord(int node, int i, int j) {
-		node_pos[node].x = i;
-		node_pos[node].y = j;
+		_nodes[node].pos.x = i;
+		_nodes[node].pos.y = j;
+	}
+
+	vector<COORD> GetNodePos() {
+		vector<COORD> v;
+
+		for(int i = 0; i < _size; ++i) {
+			v.push_back(_nodes[i].pos);
+		}
+
+		return v;
 	}
 
 	void addNode(int x, int y) {
 		_size++;
 		_g.resize(_size);
-		label.push_back(INT_MAX);
-		COORD pos(x,y);
-		node_pos.push_back(pos);
-		for(int i = 0; i < _size; ++i) _g[i].resize(_size);
+
+		_nodes.push_back(Node(_size-1, x, y, 0, 0));
+
+		for(int i = 0; i < _size; ++i) {
+			_g[i].resize(_size);
+		}
 	}
 
 	vector<int> getNeighbors(int node) {
@@ -89,18 +134,7 @@ public:
 		for(int i = 0; i < _size; ++i) {
 			if(_g[node][i]) {
 				n.push_back(i);
-			}
 		}
-		return n;
-	}
-
-	vector<int> getBiggerNeighbors(int node) {
-		vector<int> n;
-		for(int i = node; i < _size; ++i) {
-			if(node == i) continue;
-			if(_g[node][i]) {
-				n.push_back(i);
-			}
 		}
 		return n;
 	}
@@ -117,7 +151,7 @@ public:
 	}
 
 	void printNodeCoords(int node) {
-		cout << node << ": (" << node_pos[node].x << ", " << node_pos[node].y << ")" << endl;
+		cout << node << ": (" << _nodes[node].pos.x << ", " << _nodes[node].pos.y << ")" << endl;
 	}
 
 	void printCoords() {
@@ -128,6 +162,7 @@ public:
 };
 
 
+
 // implement forces
 int gdistance(COORD n1, COORD n2) {
 	int x = (n1.x - n2.x) * (n1.x - n2.x);
@@ -135,66 +170,56 @@ int gdistance(COORD n1, COORD n2) {
 	return (int) sqrt(x+y);
 }
 
-COORD hookes_force(COORD src, COORD dest) {
-	COORD res(0,0);
-
-	int d = gdistance(src, dest);
+// implement forces
+void nodes_hookes_force(Node& src, Node& dest) {
+	int d = gdistance(src.pos, dest.pos);
 
 	if(d > 100) {
-		res.y =  (HOOKES_K * (dest.y - src.y)) / d;
-		res.x =  (HOOKES_K * (dest.x - src.x)) / d;
+		src.force.x += (HOOKES_K * (dest.pos.x - src.pos.x)) / d;
+		src.force.y += (HOOKES_K * (dest.pos.y - src.pos.y)) / d;
 	}
-
-	return res;
 }
 
-COORD coulombs_force(COORD src, COORD dest) {
-	COORD res(0,0);
-
-	//k qq /r*r
-	int d = gdistance(src, dest);
+void nodes_coulombs_force(Node& src, Node& dest) {
+	int d = gdistance(src.pos, dest.pos);
 	int rr = d*d;
 
 	if(rr != 0 && d < 200) {
-		res.x = COULOMBS_K * COULOMBS_K * (dest.x - src.x) / (rr);
-		res.y = COULOMBS_K * COULOMBS_K * (dest.y - src.y) / (rr);
+		src.force.x += -1 * (COULOMBS_K * COULOMBS_K * (dest.pos.x - src.pos.x) / (rr));
+		src.force.y += -1 * (COULOMBS_K * COULOMBS_K * (dest.pos.y - src.pos.y) / (rr));
 	}
-
-	return res;
 }
 
-void apply_forces(AdjGraph& g) {
-	vector<COORD> fs;
+bool apply_forces(AdjGraph& g) {
 	for(int i = 0; i < g.getSize(); ++i) {
-		COORD src = g.getCoord(i);
-		COORD total_force(0,0);
+		Node& tsrc = g.getNode(i);
 		for(int j = 0; j < g.getSize(); ++j) {
 			if(i == j) continue;
-			COORD dest = g.getCoord(j);
+			Node& tdest = g.getNode(j);
 			// if connected, apply hookes.
 			if(g.getEdge(i, j)) {
-				COORD hookes = hookes_force(src, dest);
-				total_force.x += hookes.x;
-				total_force.y += hookes.y;
-				
+				nodes_hookes_force(tsrc, tdest);
 			}
 			// always apply coulombs
-			COORD coulombs = coulombs_force(dest, src);
-			total_force.x += coulombs.x;
-			total_force.y += coulombs.y;
-			
+			nodes_coulombs_force(tsrc, tdest);
 		}
-		fs.push_back(total_force);
 	}
 
+	bool changed = false;
+
 	for(int n = 0; n < g.getSize(); ++n) {
-		COORD src = g.getCoord(n);
-		COORD force = fs[n];
+		Node& tsrc = g.getNode(n);
 		COORD zero(0,0);
-		if(gdistance(zero, force) > 1) {
-			g.setCoord(n, src.x + force.x, src.y + force.y);
+		COORD force(tsrc.force.x, tsrc.force.y);
+		if(gdistance(zero, force) > 3) {
+			changed = true;
+			tsrc.pos.x += tsrc.force.x;
+			tsrc.pos.y += tsrc.force.y;
 		}
+		tsrc.force.x = 0;
+		tsrc.force.y = 0;
 	}
+	return changed;
 }
 
 //Perform graph layout, Daniel Tunkelang style
@@ -331,11 +356,26 @@ AdjGraph generateGrid() {
 	return grid;
 }
 
+timespec diff(timespec start, timespec end)
+{
+  timespec temp;
+  if ((end.tv_nsec-start.tv_nsec)<0) {
+    temp.tv_sec = end.tv_sec-start.tv_sec-1;
+    temp.tv_nsec = 1000000000+end.tv_nsec-start.tv_nsec;
+  } else {
+    temp.tv_sec = end.tv_sec-start.tv_sec;
+    temp.tv_nsec = end.tv_nsec-start.tv_nsec;
+  }
+  return temp;
+}
+
 
 int main(int argc, char **argv) {
 
 	//Initialize visualization
 	struct rgbData buffer[HEIGHT][WIDTH];
+	struct timespec start, stop;
+	timespec res;
 
 	bool ok =
 	init_app("SDL example", NULL, SDL_INIT_VIDEO) &&
@@ -352,27 +392,46 @@ int main(int argc, char **argv) {
 	init_data(buffer);
 	
 	/* Generate Graphs */
-	AdjGraph circle = generateCircle();
+	//AdjGraph circle = generateCircle();
 	//AdjGraph cube = generateCube();
-	//AdjGraph grid = generateGrid();
-	
-	for (int i = 0; i < 10000; ++i)
-	{
-		//apply_forces(ring);
-	}
+	AdjGraph grid = generateGrid();
+
+	bool changed = true;
+
+	clock_gettime(CLOCK_MONOTONIC, &start);
+
 	while (!doExit) {
 		//apply laws
-		//ring.printCoords();
-		apply_forces(circle);
+		if(changed) {
+			changed = apply_forces(grid);
+		}
+
+		else {
+
+			clock_gettime(CLOCK_MONOTONIC, &stop);
+			res = diff(start,stop);
+    		break;
+
+			/*Node n1 = circle.getNode(0);
+			Node n2 = circle.getNode(1);
+			int eq_dis = gdistance(n1.pos, n2.pos);
+			cout << "Equalized Distance" << eq_dis << endl;*/
+
+		}
 		//apply_forces(cube);
 		//apply_forces(grid);
 		//cout << endl;
 		//ring.printCoords();
 		//render
-		renderGraph(buffer, WIDTH, HEIGHT, circle, 0, false);
+		renderGraph(buffer, WIDTH, HEIGHT, grid, 0, false);
 		render(data_sf);
 		SDL_Delay(1000/30);
 	}
+
+	
+
+	cout << "Total Run Time" <<endl;
+	printf("Time: %zu %zu\n", res.tv_sec, res.tv_nsec);
 	return 0;
 }
 
