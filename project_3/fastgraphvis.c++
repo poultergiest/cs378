@@ -46,6 +46,14 @@ public:
 		force.x = fx;
 		force.y = fy;
 	}
+
+	Node(const Node& cpy) {
+		label = -1;
+		pos.x = cpy.pos.x;
+		pos.y = cpy.pos.y;
+		force.x = cpy.force.x;
+		force.y = cpy.force.y;
+	}
 	int label;
 	COORD pos;
 	FORCE force;
@@ -70,6 +78,16 @@ public:
 
 	Node& getNode(int node) {
 		return _nodes[node];
+	}
+
+	vector<Node*> GetNodePointers() {
+		vector<Node*> ret;
+
+		for(int i =0; i < _size; ++i) {
+			ret.push_back(&(_nodes[i]));
+		}
+
+		return ret;
 	}
 
 	bool getEdge(int node1, int node2) {
@@ -143,13 +161,34 @@ public:
 	}
 };
 
-// implement forces
 int gdistance(COORD n1, COORD n2) {
 	int x = (n1.x - n2.x) * (n1.x - n2.x);
 	int y = (n1.y - n2.y) * (n1.y - n2.y);
 	return (int) sqrt(x+y);
 }
 
+
+// implement forces
+void nodes_hookes_force(Node& src, Node& dest) {
+	int d = gdistance(src.pos, dest.pos);
+
+	if(d > 100) {
+		src.force.x += (HOOKES_K * (dest.pos.x - src.pos.x)) / d;
+		src.force.y += (HOOKES_K * (dest.pos.y - src.pos.y)) / d;
+	}
+}
+
+void nodes_coulombs_force(Node& src, Node& dest) {
+	int d = gdistance(src.pos, dest.pos);
+	int rr = d*d;
+
+	if(rr != 0 && d < 200) {
+		src.force.x += -1 * (COULOMBS_K * COULOMBS_K * (dest.pos.x - src.pos.x) / (rr));
+		src.force.y += -1 * (COULOMBS_K * COULOMBS_K * (dest.pos.y - src.pos.y) / (rr));
+	}
+}
+
+// implement quad tree
 class QTree {
 public:
 	QTree* q1;
@@ -165,10 +204,11 @@ public:
 
 	COORD force;
 
-	vector<int> nodes;     // node names bounded by this tree
-	vector<COORD> points;  // points bounded by this tree
+	vector<Node*> points;  // points bounded by this tree
 
-	QTree(int x, int y, int w, int h, int l, vector<COORD> p) {
+	Node approximatedNode;
+
+	QTree(int x, int y, int w, int h, int l, vector<Node*> p) {
 		q1 = q2 = q3 = q4 = NULL;
 		pos.x = x;
 		pos.y = y;
@@ -176,10 +216,11 @@ public:
 		width = w;
 		level = l;
 		for(int i = 0; i < (int) p.size(); ++i) {
-			if(p[i].x >= x && p[i].y >= y && p[i].x < x + w && p[i].y < y + h) {
+			if(p[i]->pos.x >= x && p[i]->pos.y >= y && p[i]->pos.x < x + w && p[i]->pos.y < y + h) {
 				points.push_back(p[i]);
 			}
 		}
+
 		if(points.size() > 1) {
 			int half_width = w / 2;
 			int half_height = h / 2;
@@ -275,28 +316,21 @@ public:
 		return (int) points.size();
 	}
 
+	void computeApproximatedNode() {
+		if(points.size() == 1) {
+			approximatedNode = Node(*points[0]);
+			return;
+		}
+		for(int i = 0; i < (int) points.size(); ++i) {
+			//approximatedNode.pos.x += 
+		}
+
+	}
+
 };
 
-void nodes_hookes_force(Node& src, Node& dest) {
-	int d = gdistance(src.pos, dest.pos);
 
-	if(d > 100) {
-		src.force.x += (HOOKES_K * (dest.pos.x - src.pos.x)) / d;
-		src.force.y += (HOOKES_K * (dest.pos.y - src.pos.y)) / d;
-	}
-}
-
-void nodes_coulombs_force(Node& src, Node& dest) {
-	int d = gdistance(src.pos, dest.pos);
-	int rr = d*d;
-
-	if(rr != 0 && d < 200) {
-		src.force.x += -1 * (COULOMBS_K * COULOMBS_K * (dest.pos.x - src.pos.x) / (rr));
-		src.force.y += -1 * (COULOMBS_K * COULOMBS_K * (dest.pos.y - src.pos.y) / (rr));
-	}
-}
-
-void apply_forces(AdjGraph& g) {
+bool apply_forces(AdjGraph& g) {
 	for(int i = 0; i < g.getSize(); ++i) {
 		Node& tsrc = g.getNode(i);
 		for(int j = 0; j < g.getSize(); ++j) {
@@ -311,17 +345,21 @@ void apply_forces(AdjGraph& g) {
 		}
 	}
 
+	bool changed = false;
+
 	for(int n = 0; n < g.getSize(); ++n) {
 		Node& tsrc = g.getNode(n);
 		COORD zero(0,0);
 		COORD force(tsrc.force.x, tsrc.force.y);
 		if(gdistance(zero, force) > 2) {
+			changed = true;
 			tsrc.pos.x += tsrc.force.x;
 			tsrc.pos.y += tsrc.force.y;
 		}
 		tsrc.force.x = 0;
 		tsrc.force.y = 0;
 	}
+	return changed;
 }
 
 //Perform graph layout, Daniel Tunkelang style
@@ -426,54 +464,21 @@ int main(int argc, char **argv) {
 
 	init_data(buffer);
 
-	int rs = 30;
+	int rs = 20;
 	AdjGraph ring(rs);
 	ring = setupHalfConnectedGraph(rs);
 
-	/*//center
-	ring.addNode(WIDTH / 2, HEIGHT / 2);
-
-	//up
-	ring.addNode(WIDTH / 2, (HEIGHT / 2) - 10);
-	ring.setEdge(0, 1, 1);
-	ring.addNode(WIDTH / 2, (HEIGHT / 2) - 20);
-	ring.setEdge(1, 2, 1);
-
-	//down
-	ring.addNode(WIDTH / 2, (HEIGHT / 2) + 10);
-	ring.setEdge(0, 3, 1);
-	ring.addNode(WIDTH / 2, (HEIGHT / 2) + 20);
-	ring.setEdge(3, 4, 1);
-
-	//left
-	ring.addNode((WIDTH / 2)-10, HEIGHT / 2);
-	ring.setEdge(0, 5, 1);
-	ring.addNode((WIDTH / 2)-20, HEIGHT / 2);
-	ring.setEdge(5, 6, 1);
-
-	//right
-	ring.addNode((WIDTH / 2)+20, HEIGHT / 2);
-	ring.setEdge(0, 7, 1);
-	ring.addNode((WIDTH / 2)+10, HEIGHT / 2);
-	ring.setEdge(7, 8, 1);*/
+	QTree* qt = new QTree(0,0, 1024, 1024, 1, ring.GetNodePointers());
 
 
-	//ring.print();
-	for (int i = 0; i < 200; ++i)
-	{
-		//apply_forces(ring);
-	}
-
-	QTree* qt = new QTree(0,0, 1024, 1024, 1, ring.GetNodePos());
-
+	bool equalized = false;
 	while (!doExit) {
 		//apply laws
-		//ring.printCoords();
-		apply_forces(ring);
-		delete qt;
-		qt = new QTree(0,0, 1024, 1024, 1, ring.GetNodePos());
-		//cout << endl;
-		//ring.printCoords();
+		if(!equalized) {
+			equalized = apply_forces(ring);
+			delete qt;
+			qt = new QTree(0,0, 1024, 1024, 1, ring.GetNodePointers());
+		}
 		//render
 		renderGraph(buffer, WIDTH, HEIGHT, ring, *qt, 0, false);
 		render(data_sf);
@@ -482,13 +487,3 @@ int main(int argc, char **argv) {
 	delete qt;
 	return 0;
 }
-
-
-/*
-//for a ring
-for(int n = 0; n < rs-1; ++n) {
-		ring.setEdge(n, n+1, 1);
-	}
-	ring.setEdge(rs-1, 0, 1);
-
-*/
