@@ -19,6 +19,10 @@ using namespace std;
 
 class COORD {
 public:
+	COORD() {
+		x=0; 
+		y=0;
+	}
 	COORD(int i, int j) {
 		x = i;
 		y = j;
@@ -38,6 +42,7 @@ public:
 		_size = n;
 		_g.resize(_size);
 		label.resize(_size);
+		node_pos.resize(_size);
 		for(int i = 0; i < _size; ++i) {
 			_g[i].resize(_size);
 			label[i] = INT_MAX;
@@ -171,11 +176,13 @@ void apply_forces(AdjGraph& g) {
 				COORD hookes = hookes_force(src, dest);
 				total_force.x += hookes.x;
 				total_force.y += hookes.y;
+				
 			}
 			// always apply coulombs
 			COORD coulombs = coulombs_force(dest, src);
 			total_force.x += coulombs.x;
 			total_force.y += coulombs.y;
+			
 		}
 		fs.push_back(total_force);
 	}
@@ -257,6 +264,74 @@ static bool renderGraph(struct rgbData data[][WIDTH], unsigned width, unsigned h
 	return 1;
 }
 
+AdjGraph generateCircle() {
+	AdjGraph circle(5);
+	circle.setCoord(0, 450, 450);
+	circle.setCoord(1, 470, 450);
+	circle.setEdge(0, 1, 1);
+	circle.setCoord(2, 470, 475);
+	circle.setEdge(1, 2, 1);
+	circle.setCoord(3, 450, 475);
+	circle.setEdge(2, 3, 1);
+	circle.setCoord(4, 430, 465);
+	circle.setEdge(3, 4, 1);
+	circle.setEdge(4, 0, 1);
+
+	return circle;
+}
+
+AdjGraph generateCube() {
+	AdjGraph cube(8);
+	//bottom diamond
+	cube.setCoord(0, 450, 450);
+	cube.setCoord(1, 470, 470);
+	cube.setEdge(0, 1, 1);
+	cube.setCoord(2, 450, 490);
+	cube.setEdge(1, 2, 1);
+	cube.setCoord(3, 430, 470);
+	cube.setEdge(2, 3, 1);
+	cube.setEdge(3, 0, 1);
+	//top diamond
+	cube.setCoord(4, 450, 400);
+	cube.setCoord(5, 470, 420);
+	cube.setEdge(4, 5, 1);
+	cube.setCoord(6, 450, 440);
+	cube.setEdge(5, 6, 1);
+	cube.setCoord(7, 430, 420);
+	cube.setEdge(6, 7, 1);
+	cube.setEdge(7, 4, 1);
+	//connect top to bottom
+	cube.setEdge(0, 4, 1);
+	cube.setEdge(1, 5, 1);
+	cube.setEdge(2, 6, 1);
+	cube.setEdge(3, 7, 1);
+	return cube;
+}
+
+AdjGraph generateGrid() {
+	AdjGraph grid(64);
+	int r = 8, c = 8, count = 0;
+	int start_x = 400, start_y = 300; 
+	for (int i = 0; i < r; i++) {
+		for (int j = 0; j < c; j++) {		
+			grid.setCoord(i*r+j, start_x + j*20, start_y + i*20);
+			if(j < c-1) {
+				grid.setEdge(i*r+j, i*r+j+1, 1);
+			}
+			if(i > 0) {
+				grid.setEdge(i*r+j, (i-1)*r+j, 1);
+			}
+			
+			count++;
+		}
+			start_y += 20;
+			start_x = 400;
+		
+	}
+	return grid;
+}
+
+
 int main(int argc, char **argv) {
 
 	//Initialize visualization
@@ -275,39 +350,12 @@ int main(int argc, char **argv) {
 	SDL_SetEventFilter(filter);
 
 	init_data(buffer);
-
-	int rs = 9;
-	AdjGraph ring(0);
-	//center
-	ring.addNode(WIDTH / 2, HEIGHT / 2);
-
-	//up
-	ring.addNode(WIDTH / 2, (HEIGHT / 2) - 10);
-	ring.setEdge(0, 1, 1);
-	ring.addNode(WIDTH / 2, (HEIGHT / 2) - 20);
-	ring.setEdge(1, 2, 1);
-
-	//down
-	ring.addNode(WIDTH / 2, (HEIGHT / 2) + 10);
-	ring.setEdge(0, 3, 1);
-	ring.addNode(WIDTH / 2, (HEIGHT / 2) + 20);
-	ring.setEdge(3, 4, 1);
-
-	//left
-	ring.addNode((WIDTH / 2)-10, HEIGHT / 2);
-	ring.setEdge(0, 5, 1);
-	ring.addNode((WIDTH / 2)-20, HEIGHT / 2);
-	ring.setEdge(5, 6, 1);
-
-	//right
-	ring.addNode((WIDTH / 2)+20, HEIGHT / 2);
-	ring.setEdge(0, 7, 1);
-	ring.addNode((WIDTH / 2)+10, HEIGHT / 2);
-	ring.setEdge(7, 8, 1);
-
 	
-
-	ring.print();
+	/* Generate Graphs */
+	AdjGraph circle = generateCircle();
+	//AdjGraph cube = generateCube();
+	//AdjGraph grid = generateGrid();
+	
 	for (int i = 0; i < 10000; ++i)
 	{
 		//apply_forces(ring);
@@ -315,11 +363,13 @@ int main(int argc, char **argv) {
 	while (!doExit) {
 		//apply laws
 		//ring.printCoords();
-		apply_forces(ring);
+		apply_forces(circle);
+		//apply_forces(cube);
+		//apply_forces(grid);
 		//cout << endl;
 		//ring.printCoords();
 		//render
-		renderGraph(buffer, WIDTH, HEIGHT, ring, 0, false);
+		renderGraph(buffer, WIDTH, HEIGHT, circle, 0, false);
 		render(data_sf);
 		SDL_Delay(1000/30);
 	}
