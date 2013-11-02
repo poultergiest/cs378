@@ -622,6 +622,8 @@ int main(int argc, char **argv) {
 
 	//Initialize visualization
 	struct rgbData buffer[HEIGHT][WIDTH];
+	struct timespec start, stop;
+	timespec res;
 
 	bool ok =
 	init_app("SDL example", NULL, SDL_INIT_VIDEO) &&
@@ -640,13 +642,14 @@ int main(int argc, char **argv) {
 	int rs = 5;
 	//AdjGraph graph(rs);
 	//graph = setupHalfConnectedGraph(rs);
-	AdjGraph graph = generateGrid();
+	// AdjGraph graph = generateGrid();
 	// AdjGraph graph = generateCircle();
-	// AdjGraph graph = generateCube();
+	AdjGraph graph = generateCube();
 
 	QTree* qt = new QTree(0,0, 1024, 1024, 1, graph.GetNodePointers());
 
 	bool changed = true;
+	clock_gettime(CLOCK_MONOTONIC, &start);
 	while (!doExit) {
 		//apply laws
 		if(changed) {
@@ -655,12 +658,25 @@ int main(int argc, char **argv) {
 			changed = apply_forces(graph);
 			delete qt;
 			qt = new QTree(0,0, 1024, 1024, 1, graph.GetNodePointers());
-		}
+		} /*else {
+			Node n1 = graph.getNode(0);
+			Node n2 = graph.getNode(1);
+
+			int d = gdistance(n1.pos, n2.pos);
+
+			cout << "the dist is: " << d << endl;
+
+			clock_gettime(CLOCK_MONOTONIC, &stop);
+			res = diff(start,stop);
+    			// break;
+		}*/
 		//render
 		renderGraph(buffer, WIDTH, HEIGHT, graph, *qt, 0, false);
 		render(data_sf);
 		SDL_Delay(1000/30);
 	}
 	delete qt;
+	cout << "Total Run Time" <<endl;
+	printf("Time: %zu %zu\n", res.tv_sec, res.tv_nsec);
 	return 0;
 }
