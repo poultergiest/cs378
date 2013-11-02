@@ -183,8 +183,12 @@ void nodes_coulombs_force(Node& src, Node& dest) {
 	int rr = d*d;
 
 	if(rr != 0 && d < 200) {
-		src.force.x += -1 * (COULOMBS_K * COULOMBS_K * (dest.pos.x - src.pos.x) / (rr));
-		src.force.y += -1 * (COULOMBS_K * COULOMBS_K * (dest.pos.y - src.pos.y) / (rr));
+		int xforce = -1 * (COULOMBS_K * COULOMBS_K * (dest.pos.x - src.pos.x) / (rr));
+		while(abs(xforce) > 50) xforce /= 2;
+		src.force.x += xforce;
+		int yforce = -1 * (COULOMBS_K * COULOMBS_K * (dest.pos.y - src.pos.y) / (rr));
+		while(abs(yforce) > 50) yforce /= 2;
+		src.force.y += yforce;
 	}
 }
 
@@ -245,6 +249,7 @@ public:
 				q4 = NULL;
 			}
 		}
+		computeApproximatedNode();
 	}
 
 	~QTree() {
@@ -288,11 +293,15 @@ public:
 
 	void DrawQTree(struct rgbData data[][WIDTH]) {
 		rgbData green = {0,255,0};
+		rgbData yellow = {0,255,255};
+
 		//draw self.
 		drawline(data, pos.x, pos.y, pos.x+width, pos.y, green);
 		drawline(data, pos.x, pos.y, pos.x, pos.y+height, green);
 		drawline(data, pos.x+width, pos.y, pos.x+width, pos.y+height, green);
 		drawline(data, pos.x, pos.y+height, pos.x+width, pos.y+height, green);
+		// if(points.size() > 1)
+		// 	drawcircle(data, approximatedNode.pos.x, approximatedNode.pos.y, 10, yellow);
 
 		//draw children;
 		if(q1 != NULL) {
@@ -317,14 +326,98 @@ public:
 	}
 
 	void computeApproximatedNode() {
-		if(points.size() == 1) {
+		int size = points.size();
+		if(size == 0) return;
+		if(size == 1) {
 			approximatedNode = Node(*points[0]);
 			return;
 		}
-		for(int i = 0; i < (int) points.size(); ++i) {
-			//approximatedNode.pos.x += 
+		for(int i = 0; i < size; ++i) {
+			approximatedNode.pos.x += points[i]->pos.x;
+			approximatedNode.pos.y += points[i]->pos.y;
+		}
+		approximatedNode.pos.x /= size;
+		approximatedNode.pos.y /= size;
+	}
+
+	void computeForce() {
+		int limit = 32;
+
+		if(points.size() <= limit) {
+			int size = points.size();
+			for(int i = 0; i < size; ++i) {
+				Node& src = *(points[i]);
+				for(int j = 0; j < size; ++j) {
+					if(i == j) continue;
+					Node& dest = *(points[j]);
+					nodes_coulombs_force(src, dest);
+				}
+			}
+			return;
 		}
 
+		vector<Node*> ap;
+		if(q1 != NULL) {
+			ap.push_back(&(q1->approximatedNode));
+		}
+		if(q2 != NULL) {
+			ap.push_back(&(q2->approximatedNode));
+		}
+		if(q3 != NULL) {
+			ap.push_back(&(q3->approximatedNode));
+		}
+		if(q4 != NULL) {
+			ap.push_back(&(q4->approximatedNode));
+		}
+		int size = ap.size();
+		for(int i = 0; i < size; ++i) {
+			Node& src = *(ap[i]);
+			for(int j = 0; j < size; ++j) {
+				if(i == j) continue;
+				Node& dest = *(ap[j]);
+				nodes_coulombs_force(src, dest);
+			}
+		}
+
+		if(q1 != NULL) { // && q1->points.size() > 1) {
+			q1->computeForce();
+		}
+		if(q2 != NULL) { //&& q2->points.size() > 1) {
+			q2->computeForce();
+		}
+		if(q3 != NULL) { //&& q3->points.size() > 1) {
+			q3->computeForce();
+		}
+		if(q4 != NULL) { //&& q4->points.size() > 1) {
+			q4->computeForce();
+		}
+	}
+
+	void applyForce() {
+		FORCE apply(0,0);
+		
+		apply.x = approximatedNode.force.x;
+		apply.y = approximatedNode.force.y;
+		
+
+		for(int i = 0; i < points.size(); ++i) {
+			Node& node = *(points[i]);
+			node.force.x += (apply.x * points.size() / 4);
+			node.force.y += (apply.y * points.size() / 4);
+		}
+
+		if(q1 != NULL && q1->points.size() > 1) {
+			q1->applyForce();
+		}
+		if(q2 != NULL&& q2->points.size() > 1) {
+			q2->applyForce();
+		}
+		if(q3 != NULL&& q3->points.size() > 1) {
+			q3->applyForce();
+		}
+		if(q4 != NULL&& q4->points.size() > 1) {
+			q4->applyForce();
+		}
 	}
 
 };
@@ -340,18 +433,18 @@ bool apply_forces(AdjGraph& g) {
 			if(g.getEdge(i, j)) {
 				nodes_hookes_force(tsrc, tdest);
 			}
-			// always apply coulombs
-			nodes_coulombs_force(tsrc, tdest);
+			// always apply coulombs  && computes coulombs
+			//nodes_coulombs_force(tsrc, tdest);
 		}
 	}
 
 	bool changed = false;
-
+	int threshold = 3;
 	for(int n = 0; n < g.getSize(); ++n) {
 		Node& tsrc = g.getNode(n);
 		COORD zero(0,0);
 		COORD force(tsrc.force.x, tsrc.force.y);
-		if(gdistance(zero, force) > 2) {
+		if(gdistance(zero, force) > threshold) {
 			changed = true;
 			tsrc.pos.x += tsrc.force.x;
 			tsrc.pos.y += tsrc.force.y;
@@ -445,6 +538,86 @@ AdjGraph setupHalfConnectedGraph(int s) {
 	return g;
 }
 
+AdjGraph generateGrid() {
+	AdjGraph grid(64);
+	int r = 8, c = 8, count = 0;
+	int start_x = 400, start_y = 300; 
+	for (int i = 0; i < r; i++) {
+		for (int j = 0; j < c; j++) {		
+			grid.setCoord(i*r+j, start_x + j*20, start_y + i*20);
+			if(j < c-1) {
+				grid.setEdge(i*r+j, i*r+j+1, 1);
+			}
+			if(i > 0) {
+				grid.setEdge(i*r+j, (i-1)*r+j, 1);
+			}
+			
+			count++;
+		}
+			start_y += 20;
+			start_x = 400;
+		
+	}
+	return grid;
+}
+
+AdjGraph generateCube() {
+	AdjGraph cube(8);
+	//bottom diamond
+	cube.setCoord(0, 450, 450);
+	cube.setCoord(1, 470, 470);
+	cube.setEdge(0, 1, 1);
+	cube.setCoord(2, 450, 490);
+	cube.setEdge(1, 2, 1);
+	cube.setCoord(3, 430, 470);
+	cube.setEdge(2, 3, 1);
+	cube.setEdge(3, 0, 1);
+	//top diamond
+	cube.setCoord(4, 450, 400);
+	cube.setCoord(5, 470, 420);
+	cube.setEdge(4, 5, 1);
+	cube.setCoord(6, 450, 440);
+	cube.setEdge(5, 6, 1);
+	cube.setCoord(7, 430, 420);
+	cube.setEdge(6, 7, 1);
+	cube.setEdge(7, 4, 1);
+	//connect top to bottom
+	cube.setEdge(0, 4, 1);
+	cube.setEdge(1, 5, 1);
+	cube.setEdge(2, 6, 1);
+	cube.setEdge(3, 7, 1);
+	return cube;
+}
+
+AdjGraph generateCircle() {
+	AdjGraph circle(5);
+	circle.setCoord(0, 450, 450);
+	circle.setCoord(1, 470, 450);
+	circle.setEdge(0, 1, 1);
+	circle.setCoord(2, 470, 475);
+	circle.setEdge(1, 2, 1);
+	circle.setCoord(3, 450, 475);
+	circle.setEdge(2, 3, 1);
+	circle.setCoord(4, 430, 465);
+	circle.setEdge(3, 4, 1);
+	circle.setEdge(4, 0, 1);
+
+	return circle;
+}
+
+timespec diff(timespec start, timespec end)
+{
+  timespec temp;
+  if ((end.tv_nsec-start.tv_nsec)<0) {
+    temp.tv_sec = end.tv_sec-start.tv_sec-1;
+    temp.tv_nsec = 1000000000+end.tv_nsec-start.tv_nsec;
+  } else {
+    temp.tv_sec = end.tv_sec-start.tv_sec;
+    temp.tv_nsec = end.tv_nsec-start.tv_nsec;
+  }
+  return temp;
+}
+
 int main(int argc, char **argv) {
 
 	//Initialize visualization
@@ -464,23 +637,27 @@ int main(int argc, char **argv) {
 
 	init_data(buffer);
 
-	int rs = 20;
-	AdjGraph ring(rs);
-	ring = setupHalfConnectedGraph(rs);
+	int rs = 5;
+	//AdjGraph graph(rs);
+	//graph = setupHalfConnectedGraph(rs);
+	AdjGraph graph = generateGrid();
+	// AdjGraph graph = generateCircle();
+	// AdjGraph graph = generateCube();
 
-	QTree* qt = new QTree(0,0, 1024, 1024, 1, ring.GetNodePointers());
+	QTree* qt = new QTree(0,0, 1024, 1024, 1, graph.GetNodePointers());
 
-
-	bool equalized = false;
+	bool changed = true;
 	while (!doExit) {
 		//apply laws
-		if(!equalized) {
-			equalized = apply_forces(ring);
+		if(changed) {
+			qt->computeForce();
+			qt->applyForce();
+			changed = apply_forces(graph);
 			delete qt;
-			qt = new QTree(0,0, 1024, 1024, 1, ring.GetNodePointers());
+			qt = new QTree(0,0, 1024, 1024, 1, graph.GetNodePointers());
 		}
 		//render
-		renderGraph(buffer, WIDTH, HEIGHT, ring, *qt, 0, false);
+		renderGraph(buffer, WIDTH, HEIGHT, graph, *qt, 0, false);
 		render(data_sf);
 		SDL_Delay(1000/30);
 	}
