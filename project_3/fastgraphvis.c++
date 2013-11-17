@@ -439,7 +439,7 @@ bool apply_forces(AdjGraph& g) {
 	}
 
 	bool changed = false;
-	int threshold = 3;
+	int threshold = 10;
 	for(int n = 0; n < g.getSize(); ++n) {
 		Node& tsrc = g.getNode(n);
 		COORD zero(0,0);
@@ -638,11 +638,11 @@ int main(int argc, char **argv) {
 	init_data(buffer);
 
 	int rs = 5;
-	//AdjGraph graph(rs);
+	AdjGraph graph(rs);
 	//graph = setupHalfConnectedGraph(rs);
-	AdjGraph graph = generateGrid();
+	//AdjGraph graph = generateGrid();
 	// AdjGraph graph = generateCircle();
-	// AdjGraph graph = generateCube();
+	//AdjGraph graph = generateCube();
 
 	QTree* qt = new QTree(0,0, 1024, 1024, 1, graph.GetNodePointers());
 

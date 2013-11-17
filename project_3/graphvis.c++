@@ -393,8 +393,8 @@ int main(int argc, char **argv) {
 	
 	/* Generate Graphs */
 	//AdjGraph circle = generateCircle();
-	//AdjGraph cube = generateCube();
-	AdjGraph grid = generateGrid();
+	AdjGraph cube = generateCube();
+	//AdjGraph grid = generateGrid();
 
 	bool changed = true;
 
@@ -403,14 +403,14 @@ int main(int argc, char **argv) {
 	while (!doExit) {
 		//apply laws
 		if(changed) {
-			changed = apply_forces(grid);
+			changed = apply_forces(cube);
 		}
 
 		else {
 
 			clock_gettime(CLOCK_MONOTONIC, &stop);
 			res = diff(start,stop);
-    		break;
+    		//break;
 
 			/*Node n1 = circle.getNode(0);
 			Node n2 = circle.getNode(1);
@@ -423,7 +423,7 @@ int main(int argc, char **argv) {
 		//cout << endl;
 		//ring.printCoords();
 		//render
-		renderGraph(buffer, WIDTH, HEIGHT, grid, 0, false);
+		renderGraph(buffer, WIDTH, HEIGHT, cube, 0, false);
 		render(data_sf);
 		SDL_Delay(1000/30);
 	}
