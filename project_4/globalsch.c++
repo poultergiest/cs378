@@ -117,7 +117,7 @@ public:
 
 		for(int i = 0; i < _size; ++i) {
 			_g[i].resize(_size);
-			_nodes[i].dist = INT_MAX;
+			_nodes[i].dist = INT_MAX-50000;
 			_nodes[i].label = i;
 			_nodes[i].prev = -1;
 		}
@@ -144,6 +144,14 @@ public:
 	void setEdge(int node1, int node2, int value) {  // makes undirected graphs
 		_g[node1][node2] = value;
 		_g[node2][node1] = value;
+	}
+
+	int getDist(int node1) {
+		return _nodes[node1].dist;
+	}
+
+	void setDist(int node1, int value) {  // makes undirected graphs
+		_nodes[node1].dist = value;
 	}
 
 	COORD getCoord(int node) {
@@ -210,8 +218,8 @@ public:
 
 queue<int> Q;
 
-int sssp(AdjGraph g, int source, int target) {
-	g.getNode(source).dist = 0;
+int sssp(AdjGraph& g, int source, int target) {
+	g.setDist(source, 0);
 	Q.push(source);
 
 	while(!Q.empty()) {
@@ -222,10 +230,10 @@ int sssp(AdjGraph g, int source, int target) {
 		for (int i = 0; i < (int)nbors.size(); ++i)
 		{
 			int n_ind = nbors[i];
-			int new_dist = g.getNode(n_ind).dist + g.getEdge(cur_ind, n_ind);
+			int new_dist = g.getDist(cur_ind) + g.getEdge(cur_ind, n_ind);
 
-			if(new_dist < g.getNode(n_ind).dist) {
-				g.getNode(n_ind).dist = new_dist;
+			if(new_dist < g.getDist(n_ind)) {
+				g.setDist(n_ind, new_dist);
 				Q.push(n_ind);
 			}
 		}
@@ -239,11 +247,13 @@ AdjGraph setupHalfConnectedGraph(int s) {
 	int size = s;
 	int half = (size / 2) + 1;
 	for(int i = 0; i < size; ++i) {
+		g.setDist(i, 50000+i);
 		for(int j = 0; j < half; ++j) {
 			g.setEdge(i, rand() % size, 5);
 		}
 		g.setEdge(i,i,0);
 	}
+	g.setEdge(0, 4, 0);
 	return g;
 }
 
@@ -253,6 +263,7 @@ int main(int argc, char * argv[]) {
 	AdjGraph graph = setupHalfConnectedGraph(5);
 
 	graph.print();
+
 	int v = sssp(graph, 0, 4);
 	cout << "Result " << v << endl;
 
