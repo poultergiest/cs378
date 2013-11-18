@@ -179,7 +179,7 @@ public:
 	vector<int> getNeighbors(int node) {
 		vector<int> n;
 		for(int i = 0; i < _size; ++i) {
-			if(_g[node][i]) {
+			if(_g[node][i] > 0) {
 				n.push_back(i);
 			}
 		}
@@ -234,10 +234,29 @@ int sssp(AdjGraph g, int source, int target) {
 }
 
 
+AdjGraph setupHalfConnectedGraph(int s) {
+	AdjGraph g(s);
+	int size = s;
+	int half = (size / 2) + 1;
+	for(int i = 0; i < size; ++i) {
+		for(int j = 0; j < half; ++j) {
+			g.setEdge(i, rand() % size, 5);
+		}
+		g.setEdge(i,i,0);
+	}
+	return g;
+}
+
 int main(int argc, char * argv[]) {
 	pthread_t threads[NUM_THREADS];
 	int ret = 0;
+	AdjGraph graph = setupHalfConnectedGraph(5);
 
+	graph.print();
+	int v = sssp(graph, 0, 4);
+	cout << "Result " << v << endl;
+
+	return 0;
 	pthread_attr_t attr;
 
 	pthread_attr_init(&attr);
