@@ -84,10 +84,12 @@ public:
 class Node {
 public:
 	Node() {
+		pthread_mutex_init(&mutex, NULL);
 		label = 0;
 	}
 
 	Node(int l, int x, int y) {
+		pthread_mutex_init(&mutex, NULL);
 		label = l;
 		pos.x = x;
 		pos.y = y;
@@ -99,8 +101,13 @@ public:
 		pos.y = cpy.pos.y;
 	}
 
+	~Node() {
+		pthread_mutex_destroy(&mutex);
+	}
+
 	int dist;
 	int label;
+	pthread_mutex_t mutex;
 	int prev;
 	COORD pos;
 };
@@ -143,7 +150,7 @@ public:
 
 	void setEdge(int node1, int node2, int value) {  // makes undirected graphs
 		_g[node1][node2] = value;
-		_g[node2][node1] = value;
+		//_g[node2][node1] = value;
 	}
 
 	int getDist(int node1) {
@@ -216,15 +223,40 @@ public:
 	}
 };
 
-queue<int> Q;
+class work {
+public:
+	queue<int> _Q;
+	pthread_mutex_t lock;
+
+};
+
+work global;
 
 int sssp(AdjGraph& g, int source, int target) {
 	g.setDist(source, 0);
-	Q.push(source);
+	pthread_mutex_lock(&global.lock);
+	global._Q.push(source);
+	pthread_mutex_unlock(&global.lock);
 
-	while(!Q.empty()) {
-		int cur_ind = Q.front();
-		Q.pop();
+	int counter = 0;
+
+	while(true) {
+		pthread_mutex_lock(&global.lock);
+		if (global._Q.empty()) {
+			counter++;
+			pthread_mutex_unlock(&global.lock);
+			if(counter > 100000) {
+				break;
+			}
+			usleep(10000);
+			continue;
+		}
+		counter = 0;
+		int cur_ind = global._Q.front();
+		global._Q.pop();
+		pthread_mutex_unlock(&global.lock);
+
+		
 		vector<int> nbors = g.getNeighbors(cur_ind);
 
 		for (int i = 0; i < (int)nbors.size(); ++i)
@@ -234,12 +266,13 @@ int sssp(AdjGraph& g, int source, int target) {
 
 			if(new_dist < g.getDist(n_ind)) {
 				g.setDist(n_ind, new_dist);
-				Q.push(n_ind);
+				global._Q.push(n_ind);
 			}
 		}
 	}
 	return g.getNode(target).dist;
 }
+
 
 
 AdjGraph setupHalfConnectedGraph(int s) {
@@ -257,16 +290,27 @@ AdjGraph setupHalfConnectedGraph(int s) {
 	return g;
 }
 
+AdjGraph circleGraph(int s) {
+	AdjGraph ring(s);
+	for(int n = 0; n < s-1; ++n) {
+		ring.setEdge(n, n+1, 1);
+	}
+	ring.setEdge(s-1, 0, 1);
+	return ring;
+
+}
+
 int main(int argc, char * argv[]) {
 	pthread_t threads[NUM_THREADS];
+
 	int ret = 0;
-	AdjGraph graph = setupHalfConnectedGraph(5);
+	AdjGraph graph = circleGraph(10);
 
 	graph.print();
-
-	int v = sssp(graph, 0, 4);
+	pthread_mutex_init(&global.lock, NULL);
+	int v = sssp(graph, 0, 9);
 	cout << "Result " << v << endl;
-
+	pthread_mutex_destroy(&global.lock);
 	return 0;
 	pthread_attr_t attr;
 
