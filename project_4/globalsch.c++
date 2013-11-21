@@ -31,56 +31,6 @@ timespec diff(timespec start, timespec end)
 	return temp;
 }
 
-class state {
-public:
-	int data;
-	bool start;
-};
-state global;
-
-
-void *ThreadProc(void *threadid)
-{
-	long tid;
-	tid = (long)threadid;
-	timespec start, end, res;
-
-	while(!global.start) {
-		asm("nop"); //dummy work that can't be compiled away
-	}
-
-	int cur_ops = 0;
-
-	int strong_work = NUM_OPS / NUM_THREADS;
-	int weak_work = NUM_OPS;
-
-	clock_gettime(CLOCK_MONOTONIC, &start);
-	while(cur_ops < strong_work) {
-		if(global.data < NUM_OPS) {
-			cur_ops++;
-		}	
-	}
-	clock_gettime(CLOCK_MONOTONIC, &end);
-
-	res = diff(start, end);
-	pthread_exit(NULL);
-}
-
-class COORD {
-public:
-	COORD() {
-		x=0; 
-		y=0;
-	}
-	COORD(int i, int j) {
-		x = i;
-		y = j;
-	}
-	int x;
-	int y;
-};
-
-
 class Node {
 public:
 	Node() {
@@ -91,25 +41,29 @@ public:
 	Node(int l, int x, int y) {
 		pthread_mutex_init(&mutex, NULL);
 		label = l;
-		pos.x = x;
-		pos.y = y;
 	}
 
 	Node(const Node& cpy) {
-		label = -1;
-		pos.x = cpy.pos.x;
-		pos.y = cpy.pos.y;
+		label = cpy.label;
+		dist = cpy.dist;
+		pthread_mutex_init(&mutex, NULL);
 	}
 
 	~Node() {
 		pthread_mutex_destroy(&mutex);
 	}
 
+	void grabLock() {
+		pthread_mutex_lock(&mutex);
+	}
+
+	void releaseLock() {
+		pthread_mutex_unlock(&mutex);
+	}
+
 	int dist;
 	int label;
 	pthread_mutex_t mutex;
-	int prev;
-	COORD pos;
 };
 
 class AdjGraph {
@@ -126,7 +80,6 @@ public:
 			_g[i].resize(_size);
 			_nodes[i].dist = INT_MAX-50000;
 			_nodes[i].label = i;
-			_nodes[i].prev = -1;
 		}
 	}
 
@@ -134,23 +87,12 @@ public:
 		return _nodes[node];
 	}
 
-	vector<Node*> GetNodePointers() {
-		vector<Node*> ret;
-
-		for(int i =0; i < _size; ++i) {
-			ret.push_back(&(_nodes[i]));
-		}
-
-		return ret;
-	}
-
 	int getEdge(int node1, int node2) {
 		return _g[node1][node2];
 	}
 
-	void setEdge(int node1, int node2, int value) {  // makes undirected graphs
+	void setEdge(int node1, int node2, int value) {
 		_g[node1][node2] = value;
-		//_g[node2][node1] = value;
 	}
 
 	int getDist(int node1) {
@@ -159,25 +101,6 @@ public:
 
 	void setDist(int node1, int value) {  // makes undirected graphs
 		_nodes[node1].dist = value;
-	}
-
-	COORD getCoord(int node) {
-		return _nodes[node].pos;
-	}
-
-	void setCoord(int node, int i, int j) {
-		_nodes[node].pos.x = i;
-		_nodes[node].pos.y = j;
-	}
-
-	vector<COORD> GetNodePos() {
-		vector<COORD> v;
-
-		for(int i = 0; i < _size; ++i) {
-			v.push_back(_nodes[i].pos);
-		}
-
-		return v;
 	}
 
 	void addNode(int x, int y) {
@@ -201,8 +124,6 @@ public:
 		return n;
 	}
 
-	int getSize() { return _size; }
-
 	void print() {
 		for(int x = 0; x < _size; ++x) {
 			for(int y = 0; y < _size; ++y) {
@@ -211,68 +132,94 @@ public:
 			cout << endl;
 		}
 	}
+};
 
-	void printNodeCoords(int node) {
-		cout << node << ": (" << _nodes[node].pos.x << ", " << _nodes[node].pos.y << ")" << endl;
-	}
-
-	void printCoords() {
-		for(int i = 0; i < _size; ++i) {
-			printNodeCoords(i);
-		}
+class nodeComparison {
+public:
+	bool operator() (const Node& lhs, const Node& rhs) const {
+		return lhs.dist > rhs.dist;
 	}
 };
 
-class work {
+typedef priority_queue<Node, vector<Node>, nodeComparison> node_priority_queue;
+
+class thread_safe_node_queue {
 public:
-	queue<int> _Q;
+	node_priority_queue _Q2;
 	pthread_mutex_t lock;
 
 };
-
-work global;
+thread_safe_node_queue work;
 
 int sssp(AdjGraph& g, int source, int target) {
 	g.setDist(source, 0);
-	pthread_mutex_lock(&global.lock);
-	global._Q.push(source);
-	pthread_mutex_unlock(&global.lock);
+	pthread_mutex_lock(&work.lock);
+	Node& s = g.getNode(source);
+	work._Q2.push(s);
+	pthread_mutex_unlock(&work.lock);
 
 	int counter = 0;
 
 	while(true) {
-		pthread_mutex_lock(&global.lock);
-		if (global._Q.empty()) {
+		pthread_mutex_lock(&work.lock);
+		if (work._Q2.empty()) {
 			counter++;
-			pthread_mutex_unlock(&global.lock);
-			if(counter > 100000) {
+			pthread_mutex_unlock(&work.lock);
+			if(counter > 500) {
 				break;
 			}
 			usleep(10000);
 			continue;
 		}
+
 		counter = 0;
-		int cur_ind = global._Q.front();
-		global._Q.pop();
-		pthread_mutex_unlock(&global.lock);
+		Node cur_node = work._Q2.top();
+		work._Q2.pop();
+		pthread_mutex_unlock(&work.lock);
 
 		
-		vector<int> nbors = g.getNeighbors(cur_ind);
+		vector<int> nbors = g.getNeighbors(cur_node.label);
 
-		for (int i = 0; i < (int)nbors.size(); ++i)
+
+		//get locks for all neighbors
+
+		for (int i = 0; i < (int) nbors.size(); ++i)
 		{
 			int n_ind = nbors[i];
-			int new_dist = g.getDist(cur_ind) + g.getEdge(cur_ind, n_ind);
+			int new_dist = g.getDist(cur_node.label) + g.getEdge(cur_node.label, n_ind);
 
 			if(new_dist < g.getDist(n_ind)) {
 				g.setDist(n_ind, new_dist);
-				global._Q.push(n_ind);
+
+				Node& n = g.getNode(n_ind);
+				work._Q2.push(n);
 			}
 		}
+
+		//release locks for all neighbors
+		//release all locks
+		pthread_mutex_unlock(&work.lock);
 	}
 	return g.getNode(target).dist;
 }
 
+void *ThreadProc(void *threadid)
+{
+	long tid;
+	tid = (long)threadid;
+	timespec start, end, res;
+
+	int cur_ops = 0;
+
+	clock_gettime(CLOCK_MONOTONIC, &start);
+	while(cur_ops < 100000) {
+		++cur_ops;
+	}
+	clock_gettime(CLOCK_MONOTONIC, &end);
+
+	res = diff(start, end);
+	pthread_exit(NULL);
+}
 
 
 AdjGraph setupHalfConnectedGraph(int s) {
@@ -307,17 +254,20 @@ int main(int argc, char * argv[]) {
 	AdjGraph graph = circleGraph(10);
 
 	graph.print();
-	pthread_mutex_init(&global.lock, NULL);
+	pthread_mutex_init(&work.lock, NULL);
 	int v = sssp(graph, 0, 9);
 	cout << "Result " << v << endl;
-	pthread_mutex_destroy(&global.lock);
+	pthread_mutex_destroy(&work.lock);
+	
 	return 0;
+
+
 	pthread_attr_t attr;
 
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 	int t;
-	global.start = false;
+	
 
 	for(t = 0; t < NUM_THREADS; ++t) {
 	//printf("In main: creating thread %d\n", t);
@@ -329,7 +279,7 @@ int main(int argc, char * argv[]) {
 		}
 	}
 	pthread_attr_destroy(&attr);
-	global.start = true;
+	
 	for(t=0; t < NUM_THREADS; ++t) {
 		ret = pthread_join(threads[t], NULL);
 		if(ret) {
