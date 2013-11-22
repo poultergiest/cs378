@@ -10,7 +10,7 @@ SOURCE = globalsch.c++
 
 g: ${SOURCE}
 	clear
-	${CC} -o ${TARGET} ${SOURCE} ${CFLAGS} 
+	${CC} -g -o ${TARGET} ${SOURCE} ${CFLAGS} 
 
 clean:
 	rm -f *.out {TARGET} 

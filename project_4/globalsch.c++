@@ -13,10 +13,7 @@
 
 using namespace std;
 
-#define NUM_THREADS 40
-#define NUM_OPS 345
-
-
+#define NUM_THREADS 1
 
 timespec diff(timespec start, timespec end)
 {
@@ -53,7 +50,7 @@ public:
 		pthread_mutex_destroy(&mutex);
 	}
 
-	void grabLock() {
+	void getLock() {
 		pthread_mutex_lock(&mutex);
 	}
 
@@ -117,11 +114,34 @@ public:
 	vector<int> getNeighbors(int node) {
 		vector<int> n;
 		for(int i = 0; i < _size; ++i) {
+			if(i == node) continue;
 			if(_g[node][i] > 0) {
 				n.push_back(i);
 			}
 		}
 		return n;
+	}
+
+	void getNodeLock(int node) {
+		_nodes[node].getLock();
+	}
+
+	void releaseNodeLock(int node) {
+		_nodes[node].releaseLock();
+	}
+
+	void getNeighborLocks(vector<int> nbors) {
+		for(int i = 0; i < (int) nbors.size(); ++i) {
+			assert(nbors[i] >= 0 && nbors[i] < _size);
+			_nodes[nbors[i]].getLock();
+		}
+	}
+
+	void releaseNeighborLocks(vector<int> nbors) {
+		for(int i = (int)nbors.size(); i >= 0; --i) {
+			assert(nbors[i] >= 0 && nbors[i] < _size);
+			_nodes[nbors[i]].releaseLock();
+		}
 	}
 
 	void print() {
@@ -163,12 +183,13 @@ int sssp(AdjGraph& g, int source, int target) {
 	while(true) {
 		pthread_mutex_lock(&work.lock);
 		if (work._Q2.empty()) {
+			break;
 			counter++;
 			pthread_mutex_unlock(&work.lock);
-			if(counter > 500) {
+			if(counter > 100) {
 				break;
 			}
-			usleep(10000);
+			usleep(5000);
 			continue;
 		}
 
@@ -176,12 +197,75 @@ int sssp(AdjGraph& g, int source, int target) {
 		Node cur_node = work._Q2.top();
 		work._Q2.pop();
 		pthread_mutex_unlock(&work.lock);
-
+		cout << "here" << endl;
 		
 		vector<int> nbors = g.getNeighbors(cur_node.label);
 
+		//get locks for all neighbors
+		g.getNodeLock(cur_node.label);
+		g.getNeighborLocks(nbors);
+		cout << "here" << endl;
+		for (int i = 0; i < (int) nbors.size(); ++i)
+		{
+			int n_ind = nbors[i];
+			int new_dist = g.getDist(cur_node.label) + g.getEdge(cur_node.label, n_ind);
+
+			if(new_dist < g.getDist(n_ind)) {
+				g.setDist(n_ind, new_dist);
+
+				Node& n = g.getNode(n_ind);
+				pthread_mutex_lock(&work.lock);
+				work._Q2.push(n);
+				pthread_mutex_unlock(&work.lock);
+			}
+		}
+
+		//release locks for all neighbors
+		g.releaseNeighborLocks(nbors);
+		cout << "here20" << endl;
+		g.releaseNodeLock(cur_node.label);
+	}
+	return g.getNode(target).dist;
+}
+
+AdjGraph graph(0);
+
+void *ThreadProc(void *threadid)
+{
+	long tid;
+	tid = (long)threadid;
+
+	cout << "hello from thread: " << tid << endl;
+
+	timespec start, end, res;
+
+	AdjGraph& g = graph;
+
+	int counter = 0;
+
+	clock_gettime(CLOCK_MONOTONIC, &start);
+	while(true) {
+		pthread_mutex_lock(&work.lock);
+		if (work._Q2.empty()) {
+			counter++;
+			pthread_mutex_unlock(&work.lock);
+			if(counter > 500) {
+				break;
+			}
+			usleep(5000);
+			continue;
+		}
+
+		counter = 0;
+		Node cur_node = work._Q2.top();
+		work._Q2.pop();
+		pthread_mutex_unlock(&work.lock);
+		
+		vector<int> nbors = g.getNeighbors(cur_node.label);
 
 		//get locks for all neighbors
+		g.getNodeLock(cur_node.label);
+		g.getNeighborLocks(nbors);
 
 		for (int i = 0; i < (int) nbors.size(); ++i)
 		{
@@ -192,28 +276,15 @@ int sssp(AdjGraph& g, int source, int target) {
 				g.setDist(n_ind, new_dist);
 
 				Node& n = g.getNode(n_ind);
+				pthread_mutex_lock(&work.lock);
 				work._Q2.push(n);
+				pthread_mutex_unlock(&work.lock);
 			}
 		}
 
 		//release locks for all neighbors
-		//release all locks
-		pthread_mutex_unlock(&work.lock);
-	}
-	return g.getNode(target).dist;
-}
-
-void *ThreadProc(void *threadid)
-{
-	long tid;
-	tid = (long)threadid;
-	timespec start, end, res;
-
-	int cur_ops = 0;
-
-	clock_gettime(CLOCK_MONOTONIC, &start);
-	while(cur_ops < 100000) {
-		++cur_ops;
+		g.releaseNeighborLocks(nbors);
+		g.releaseNodeLock(cur_node.label);
 	}
 	clock_gettime(CLOCK_MONOTONIC, &end);
 
@@ -227,7 +298,6 @@ AdjGraph setupHalfConnectedGraph(int s) {
 	int size = s;
 	int half = (size / 2) + 1;
 	for(int i = 0; i < size; ++i) {
-		g.setDist(i, 50000+i);
 		for(int j = 0; j < half; ++j) {
 			g.setEdge(i, rand() % size, 5);
 		}
@@ -244,28 +314,33 @@ AdjGraph circleGraph(int s) {
 	}
 	ring.setEdge(s-1, 0, 1);
 	return ring;
-
 }
 
 int main(int argc, char * argv[]) {
 	pthread_t threads[NUM_THREADS];
 
 	int ret = 0;
-	AdjGraph graph = circleGraph(10);
+	int size = 30;
+	//graph = circleGraph(size);
+	graph = setupHalfConnectedGraph(size);
 
 	graph.print();
 	pthread_mutex_init(&work.lock, NULL);
 	int v = sssp(graph, 0, 9);
-	cout << "Result " << v << endl;
-	pthread_mutex_destroy(&work.lock);
-	
+	cout << "res: " << v << endl;
 	return 0;
 
+	Node& s = graph.getNode(0);
+	s.dist = 0;
+	work._Q2.push(s);
+	//cout << "Result " << v << endl;
 
 	pthread_attr_t attr;
 
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+
+
 	int t;
 	
 
@@ -290,10 +365,17 @@ int main(int argc, char * argv[]) {
 
 	printf("Threads completed: %d\n\nWriting runtimes\n", NUM_THREADS);
 
-	ofstream file;
-	file.open("datastuffthing.txt", ios::out | ios::app);
-	file << "hey" << endl;
-	file.close();
+	int dist = graph.getDist(size-1);
 
+	cout << "Distance to target: " << dist << endl;
+
+	// ofstream file;
+	// file.open("datastuffthing.txt", ios::out | ios::app);
+	// file << "hey" << endl;
+	// file.close();
+
+	pthread_mutex_destroy(&work.lock);
+	
+	//return 0;
 	pthread_exit(NULL);
 }
