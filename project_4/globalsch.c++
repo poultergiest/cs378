@@ -13,7 +13,8 @@
 
 using namespace std;
 
-#define NUM_THREADS 1
+#define NUM_THREADS 5
+#define SIZE 1000
 
 timespec diff(timespec start, timespec end)
 {
@@ -138,7 +139,8 @@ public:
 	}
 
 	void releaseNeighborLocks(vector<int> nbors) {
-		for(int i = (int)nbors.size(); i >= 0; --i) {
+		for(int i = (int)nbors.size()-1; i >= 0; --i) {
+			/*cout << "index " << nbors[i] << "size " << (int)nbors.size() << endl;*/
 			assert(nbors[i] >= 0 && nbors[i] < _size);
 			_nodes[nbors[i]].releaseLock();
 		}
@@ -245,6 +247,7 @@ void *ThreadProc(void *threadid)
 
 	clock_gettime(CLOCK_MONOTONIC, &start);
 	while(true) {
+		//cout << "hello from thread: " << tid << endl;
 		pthread_mutex_lock(&work.lock);
 		if (work._Q2.empty()) {
 			counter++;
@@ -265,11 +268,12 @@ void *ThreadProc(void *threadid)
 
 		//get locks for all neighbors
 		g.getNodeLock(cur_node.label);
-		g.getNeighborLocks(nbors);
+		/*g.getNeighborLocks(nbors);*/
 
 		for (int i = 0; i < (int) nbors.size(); ++i)
 		{
 			int n_ind = nbors[i];
+			g.getNodeLock(n_ind);
 			int new_dist = g.getDist(cur_node.label) + g.getEdge(cur_node.label, n_ind);
 
 			if(new_dist < g.getDist(n_ind)) {
@@ -280,10 +284,11 @@ void *ThreadProc(void *threadid)
 				work._Q2.push(n);
 				pthread_mutex_unlock(&work.lock);
 			}
+			g.releaseNodeLock(n_ind);
 		}
 
 		//release locks for all neighbors
-		g.releaseNeighborLocks(nbors);
+		/*g.releaseNeighborLocks(nbors);*/
 		g.releaseNodeLock(cur_node.label);
 	}
 	clock_gettime(CLOCK_MONOTONIC, &end);
@@ -320,15 +325,15 @@ int main(int argc, char * argv[]) {
 	pthread_t threads[NUM_THREADS];
 
 	int ret = 0;
-	int size = 30;
+	int size = SIZE;
 	//graph = circleGraph(size);
 	graph = setupHalfConnectedGraph(size);
 
 	graph.print();
 	pthread_mutex_init(&work.lock, NULL);
-	int v = sssp(graph, 0, 9);
-	cout << "res: " << v << endl;
-	return 0;
+	/*int v = sssp(graph, 0, 9);
+	cout << "res: " << v << endl;*/
+	/*return 0;*/
 
 	Node& s = graph.getNode(0);
 	s.dist = 0;
@@ -347,6 +352,7 @@ int main(int argc, char * argv[]) {
 	for(t = 0; t < NUM_THREADS; ++t) {
 	//printf("In main: creating thread %d\n", t);
 		ret = pthread_create(&threads[t], &attr, ThreadProc, (void*)t);
+		usleep(1000);
 		if(ret) {
 			printf("Error: %d\n", ret);
 
