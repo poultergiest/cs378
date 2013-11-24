@@ -14,7 +14,7 @@
 using namespace std;
 
 #define NUM_THREADS 5
-#define SIZE 1000
+#define SIZE 20
 
 timespec diff(timespec start, timespec end)
 {
@@ -74,9 +74,11 @@ public:
 		_nodes.resize(_size);
 		_g.resize(_size);
 
+		int infinity = INT_MAX-50000;
+
 		for(int i = 0; i < _size; ++i) {
 			_g[i].resize(_size);
-			_nodes[i].dist = INT_MAX-50000;
+			_nodes[i].dist = infinity;
 			_nodes[i].label = i;
 		}
 	}
@@ -321,9 +323,63 @@ AdjGraph circleGraph(int s) {
 	return ring;
 }
 
+AdjGraph setupGraphFromFile(ifstream& file) {
+	string line;
+	
+	while(getline(file, line))
+	{
+	    if(line[0] == 'p') break;
+	}
+
+	// Parses the number of nodes we need
+	line = line.substr(5);
+	unsigned pos = line.find(" ");
+	line = line.substr(0, pos);
+
+	int size = atoi(line.c_str());
+	getline(file, line);getline(file, line);
+
+	cout << "Graph node size is: " << size << endl;
+
+	// TODO: REMOVE THIS
+	size = 20;
+
+	AdjGraph graph(size);
+
+	int node1 = 0;
+	int node2 = 0;
+	int length_between_nodes = 0;
+	int edges = 0;
+	while(getline(file, line))
+	{
+		if(line[0] == 'a') {
+			line = line.substr(2);
+			node1 = atoi(line.c_str());
+			line = line.substr(line.find(" ")+1);
+			node2 = atoi(line.c_str());
+			if(node1 < 1 || node2 < 1 || node1 >= size || node2 >= size) {
+				continue;
+			}
+			line = line.substr(line.find(" ")+1);
+			length_between_nodes = atoi(line.c_str());
+			graph.setEdge(node1-1, node2-1, length_between_nodes);
+		} else {
+			cout << "wtf: " << line << endl;
+			break;
+		}
+		edges++;
+	}
+	cout << "edges: " << edges << endl;
+	return graph;
+}
+
 int main(int argc, char * argv[]) {
 	pthread_t threads[NUM_THREADS];
 
+	ifstream map_file("map.gr");
+	graph = setupGraphFromFile(map_file);
+	graph.print();
+return 0;
 	int ret = 0;
 	int size = SIZE;
 	//graph = circleGraph(size);
