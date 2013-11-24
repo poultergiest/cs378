@@ -16,6 +16,8 @@ using namespace std;
 #define NUM_THREADS 5
 #define SIZE 20
 
+#define INFINITY (INT_MAX-50000)
+
 timespec diff(timespec start, timespec end)
 {
 	timespec temp;
@@ -74,11 +76,9 @@ public:
 		_nodes.resize(_size);
 		_g.resize(_size);
 
-		int infinity = INT_MAX-50000;
-
 		for(int i = 0; i < _size; ++i) {
 			_g[i].resize(_size);
-			_nodes[i].dist = infinity;
+			_nodes[i].dist = INFINITY;
 			_nodes[i].label = i;
 		}
 	}
