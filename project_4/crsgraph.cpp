@@ -68,7 +68,6 @@ class CrsGraph {
 	vector<Node> _nodes;
 	vector<int> ptr;
 	vector<Edge> edges;
-	
 public:
 	CrsGraph(int n) {
 		_size = n;
@@ -307,6 +306,15 @@ CrsGraph setupGraphFromFile(ifstream& file) {
 	}
 	cout << "edges: " << edges << endl;
 	graph.sortEdges();
+	return graph;
+}
+
+CrsGraph setupRingGrahp(int ring_size) {
+	CrsGraph graph(ring_size);
+	for(int i = 0; i < ring_size-1; ++i) {
+		graph.addEdge(i, i+1, 5, false);
+	}
+	graph.addEdge(ring_size-1, 0, 5, true);
 	return graph;
 }
 

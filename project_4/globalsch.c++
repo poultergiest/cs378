@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <vector>
 #include <limits.h>
@@ -16,7 +17,7 @@ using namespace std;
 #define NUM_THREADS 5
 #define SIZE 20
 
-#define INFINITY (INT_MAX-50000)
+#define INF (INT_MAX-50000)
 
 timespec diff(timespec start, timespec end)
 {
@@ -29,6 +30,17 @@ timespec diff(timespec start, timespec end)
 		temp.tv_nsec = end.tv_nsec-start.tv_nsec;
 	}
 	return temp;
+}
+
+struct Edge {
+        int src;
+        int dest;
+        int length;
+};
+
+bool EdgeComparator(Edge e1, Edge e2) {
+        if(e1.src == e2.src) return e1.dest < e2.dest;
+        return e1.src < e2.src;
 }
 
 class Node {
@@ -78,7 +90,7 @@ public:
 
 		for(int i = 0; i < _size; ++i) {
 			_g[i].resize(_size);
-			_nodes[i].dist = INFINITY;
+			_nodes[i].dist = INF;
 			_nodes[i].label = i;
 		}
 	}
@@ -157,6 +169,133 @@ public:
 		}
 	}
 };
+
+class CrsGraph {
+        int _size;
+        vector<int> label;
+        vector<Node> _nodes;
+        vector<int> ptr;
+        vector<Edge> edges;
+public:
+        CrsGraph(int n) {
+                _size = n;
+                label.resize(_size);
+                _nodes.resize(_size);
+                ptr.resize(_size);
+                edges.reserve(733846);
+		for(int i = 0; i < _size; ++i) {
+                        label[i] = i;
+                        _nodes[i].dist = INF;
+                        _nodes[i].label = i;
+                }
+        }
+
+        void sortEdges() {
+		sort(edges.begin(), edges.end(), EdgeComparator);
+                int index = 0;
+                for(int i = 0; i < _size; ++i) {
+                        while(index < _size && edges[index].src <= i) index++;
+                        ptr[i] = index;
+                }
+        }
+
+        void printEdges() {
+                for(int i = 0; i < (int) edges.size(); ++i) {
+                        cout << i << " edge src: " << edges[i].src << " dest: " << edges[i].dest << endl;
+                }
+        }
+
+        int getDist(int node1) {
+                return _nodes[node1].dist;
+        }
+
+        void setDist(int node1, int value) {  // makes undirected graphs
+                _nodes[node1].dist = value;
+        }
+
+        bool hasEdge(int node1, int node2) {
+		 for(int i = 0; i < (int) edges.size(); ++i) {
+                        if(edges[i].src == node1 && edges[i].dest == node2) return true;
+                }
+                return false;
+        }
+
+        int getEdge(int node1, int node2) {
+                return 0;
+        }
+
+        void setLabel(int node, int value) { label[node] = value; }
+        int getLabel(int node) { return label[node]; }
+
+        vector<int> getNeighbors(int node) {
+                int start = 0;
+                if(node > 0) {
+                        start = ptr[node-1];
+                }
+                int end = ptr[node];
+                vector<int> n(end-start);
+                for(int i = 0; i < end-start; ++i) n[i] = edges[i+start].dest;
+                return n;
+        }
+
+	int getSize() { return _size; }
+
+        void addNode() {
+                _size++;
+                label.push_back(INT_MAX);
+                ptr.resize(_size);
+        }
+
+        Node& getNode(int node) {
+                return _nodes[node];
+        }
+
+        void getNodeLock(int node) {
+                _nodes[node].getLock();
+        }
+
+        void releaseNodeLock(int node) {
+                _nodes[node].releaseLock();
+        }
+
+        void addEdge(int node1, int node2, int len, bool sort = true) {
+		//if(hasEdge(node1, node2)) return;
+                Edge temp;
+                temp.src = node1;
+                temp.dest = node2;
+                temp.length = len;
+                edges.push_back(temp);
+                if(sort)
+                        sortEdges();
+        }
+
+        void printGraph() {
+                int index = 0;
+                for(int i = 0; i < _size; i++) {
+                        for(int j = 0; j < _size; j++) {
+                                if(index >= (int) edges.size()) {
+                                        cout << "0 ";
+                                        continue;
+                                }
+                                if(edges[index].src == i && edges[index].dest == j) {
+                                        cout << "1 ";
+                                        index++;
+                                        continue;
+                                }
+                                cout << "0 ";
+                        }
+			cout << endl;
+                }       
+        }
+
+        void printPtr() {
+                for(int i = 0; i < (int) ptr.size(); i++) {
+                        cout << i << ": " << ptr[i] << endl;
+                }
+        }
+};
+
+
 
 class nodeComparison {
 public:
