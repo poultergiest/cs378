@@ -65,7 +65,7 @@ public:
 class CrsGraph {
 	int _size;
 	vector<int> label;
-	vector<Node> nodes;
+	vector<Node> _nodes;
 	vector<int> ptr;
 	vector<Edge> edges;
 	
@@ -73,7 +73,7 @@ public:
 	CrsGraph(int n) {
 		_size = n;
 		label.resize(_size);
-		nodes.resize(_size);
+		_nodes.resize(_size);
 		ptr.resize(_size);
 		edges.reserve(733846);
 
@@ -97,6 +97,14 @@ public:
 		for(int i = 0; i < (int) edges.size(); ++i) {
 			cout << i << " edge src: " << edges[i].src << " dest: " << edges[i].dest << endl;
 		}
+	}
+
+	int getDist(int node1) {
+		return _nodes[node1].dist;
+	}
+
+	void setDist(int node1, int value) {  // makes undirected graphs
+		_nodes[node1].dist = value;
 	}
 
 	bool hasEdge(int node1, int node2) {
