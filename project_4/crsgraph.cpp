@@ -114,6 +114,10 @@ public:
 		return false;
 	}
 
+	int getEdge(int node1, int node2) {
+		return 0;
+	}
+
 	void setLabel(int node, int value) { label[node] = value; }
 	int getLabel(int node) { return label[node]; }
 
@@ -135,6 +139,18 @@ public:
 		label.push_back(INT_MAX);
 		ptr.resize(_size);
 	}
+
+	Node& getNode(int node) {
+                return _nodes[node];
+        }
+
+	void getNodeLock(int node) {
+                _nodes[node].getLock();
+        }
+
+        void releaseNodeLock(int node) {
+                _nodes[node].releaseLock();
+        }
 
 	void addEdge(int node1, int node2, int len, bool sort = true) {
 		//if(hasEdge(node1, node2)) return;
@@ -173,7 +189,24 @@ public:
 	}
 };
 
-/*int sssp(CrsGraph& g, int source, int target) {
+class nodeComparison {
+public:
+        bool operator() (const Node& lhs, const Node& rhs) const {
+                return lhs.dist > rhs.dist;
+        }
+};
+
+typedef priority_queue<Node, vector<Node>, nodeComparison> node_priority_queue;
+
+class thread_safe_node_queue {
+public:
+        node_priority_queue _Q2;
+        pthread_mutex_t lock;
+
+};
+thread_safe_node_queue work;
+
+int sssp(CrsGraph& g, int source, int target) {
 	g.setDist(source, 0);
 	pthread_mutex_lock(&work.lock);
 	Node& s = g.getNode(source);
@@ -205,8 +238,8 @@ public:
 
 		//get locks for all neighbors
 		g.getNodeLock(cur_node.label);
-		g.getNeighborLocks(nbors);
-		cout << "here" << endl;
+		//g.getNeighborLocks(nbors);
+		//cout << "here" << endl;
 		for (int i = 0; i < (int) nbors.size(); ++i)
 		{
 			int n_ind = nbors[i];
@@ -223,12 +256,11 @@ public:
 		}
 
 		//release locks for all neighbors
-		g.releaseNeighborLocks(nbors);
-		cout << "here20" << endl;
+		//g.releaseNeighborLocks(nbors);
 		g.releaseNodeLock(cur_node.label);
 	}
 	return g.getNode(target).dist;
-}*/
+}
 
 CrsGraph setupGraphFromFile(ifstream& file) {
 	string line;
