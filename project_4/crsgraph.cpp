@@ -279,7 +279,6 @@ CrsGraph setupGraphFromFile(ifstream& file) {
 }
 
 int main() {
-	cout << "hey" << endl;
 	ifstream map_file("map.gr");
 	CrsGraph graph = setupGraphFromFile(map_file);
 	return 0;
