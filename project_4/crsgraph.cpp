@@ -323,10 +323,10 @@ CrsGraph setupRingGraph(int ring_size) {
 
 int main() {
 	ifstream map_file("map.gr");
-	//CrsGraph graph = setupGraphFromFile(map_file);
-	CrsGraph graph = setupRingGraph(10);
-	graph.printGraph();
-	int x = sssp(graph, 0, 9);
+	CrsGraph graph = setupGraphFromFile(map_file);
+	//CrsGraph graph = setupRingGraph(10);
+	//graph.printGraph();
+	int x = sssp(graph, 1, 2);
 	cout << "sssp: " << x << endl;
 	return 0;
 }

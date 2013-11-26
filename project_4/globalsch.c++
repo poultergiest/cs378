@@ -374,6 +374,61 @@ int sssp(AdjGraph& g, int source, int target) {
 	return g.getNode(target).dist;
 }
 
+int crs_sssp(CrsGraph& g, int source, int target) {
+        g.setDist(source, 0);
+        pthread_mutex_lock(&work.lock);
+        Node& s = g.getNode(source);
+        work._Q2.push(s);
+        pthread_mutex_unlock(&work.lock);
+
+        int counter = 0;
+
+        while(true) {
+                pthread_mutex_lock(&work.lock);
+                if (work._Q2.empty()) {
+                        break;
+                        counter++;
+                        pthread_mutex_unlock(&work.lock);
+                        if(counter > 100) {
+                                break;
+                        }
+                        usleep(5000);
+                        continue;
+                }
+
+                counter = 0;
+                Node cur_node = work._Q2.top();
+                work._Q2.pop();
+                pthread_mutex_unlock(&work.lock);
+
+                vector<int> nbors = g.getNeighbors(cur_node.label);
+		//get locks for all neighbors
+                g.getNodeLock(cur_node.label);
+                //g.getNeighborLocks(nbors);
+                //cout << "here" << endl;
+                for (int i = 0; i < (int) nbors.size(); ++i)
+                {
+                        int n_ind = nbors[i];
+                        int new_dist = g.getDist(cur_node.label) + g.getEdge(cur_node.label, n_ind);
+
+                        if(new_dist < g.getDist(n_ind)) {
+                                g.setDist(n_ind, new_dist);
+
+                                Node& n = g.getNode(n_ind);
+                                pthread_mutex_lock(&work.lock);
+                                work._Q2.push(n);
+                                pthread_mutex_unlock(&work.lock);
+                        }
+                }
+
+                //release locks for all neighbors
+                //g.releaseNeighborLocks(nbors);
+                g.releaseNodeLock(cur_node.label);
+        }
+	return g.getNode(target).dist;
+}
+
+
 AdjGraph graph(0);
 
 void *ThreadProc(void *threadid)
@@ -441,21 +496,6 @@ void *ThreadProc(void *threadid)
 	pthread_exit(NULL);
 }
 
-
-AdjGraph setupHalfConnectedGraph(int s) {
-	AdjGraph g(s);
-	int size = s;
-	int half = (size / 2) + 1;
-	for(int i = 0; i < size; ++i) {
-		for(int j = 0; j < half; ++j) {
-			g.setEdge(i, rand() % size, 5);
-		}
-		g.setEdge(i,i,0);
-	}
-	g.setEdge(0, 4, 0);
-	return g;
-}
-
 AdjGraph circleGraph(int s) {
 	AdjGraph ring(s);
 	for(int n = 0; n < s-1; ++n) {
@@ -465,67 +505,66 @@ AdjGraph circleGraph(int s) {
 	return ring;
 }
 
-AdjGraph setupGraphFromFile(ifstream& file) {
-	string line;
-	
-	while(getline(file, line))
-	{
-	    if(line[0] == 'p') break;
-	}
+CrsGraph setupGraphFromFile(ifstream& file) {
+        string line;
 
-	// Parses the number of nodes we need
-	line = line.substr(5);
-	unsigned pos = line.find(" ");
-	line = line.substr(0, pos);
+        while(getline(file, line))
+        {
+            if(line[0] == 'p') break;
+        }
 
-	int size = atoi(line.c_str());
-	getline(file, line);getline(file, line);
+        // Parses the number of nodes we need
+        line = line.substr(5);
+        unsigned pos = line.find(" ");
+        line = line.substr(0, pos);
 
-	cout << "Graph node size is: " << size << endl;
+        int size = atoi(line.c_str());
+        getline(file, line);getline(file, line);
 
-	// TODO: REMOVE THIS
-	size = 20;
+        cout << "Graph node size is: " << size << endl;
 
-	AdjGraph graph(size);
+        CrsGraph graph(size);
 
-	int node1 = 0;
-	int node2 = 0;
-	int length_between_nodes = 0;
-	int edges = 0;
-	while(getline(file, line))
-	{
-		if(line[0] == 'a') {
-			line = line.substr(2);
-			node1 = atoi(line.c_str());
-			line = line.substr(line.find(" ")+1);
-			node2 = atoi(line.c_str());
-			if(node1 < 1 || node2 < 1 || node1 >= size || node2 >= size) {
-				continue;
-			}
-			line = line.substr(line.find(" ")+1);
-			length_between_nodes = atoi(line.c_str());
-			graph.setEdge(node1-1, node2-1, length_between_nodes);
-		} else {
-			cout << "wtf: " << line << endl;
-			break;
-		}
-		edges++;
-	}
-	cout << "edges: " << edges << endl;
-	return graph;
+        int node1 = 0;
+        int node2 = 0;
+        int length_between_nodes = 0;
+        int edges = 0;
+        while(getline(file, line))
+        {
+                if(line[0] == 'a') {
+                        line = line.substr(2);
+                        node1 = atoi(line.c_str());
+                        line = line.substr(line.find(" ")+1);
+                        node2 = atoi(line.c_str());
+                        if(node1 < 1 || node2 < 1 || node1 >= size || node2 >= size) {
+                                continue;
+                        }
+                        line = line.substr(line.find(" ")+1);
+                        length_between_nodes = atoi(line.c_str());
+                        graph.addEdge(node1-1, node2-1, length_between_nodes, false);
+                } else {
+			 cout << "wtf: " << line << endl;
+                        break;
+                }
+                edges++;
+        }
+        cout << "edges: " << edges << endl;
+        graph.sortEdges();
+        return graph;
 }
 
 int main(int argc, char * argv[]) {
 	pthread_t threads[NUM_THREADS];
 
 	ifstream map_file("map.gr");
-	graph = setupGraphFromFile(map_file);
+	//graph = setupGraphFromFile(map_file);
+	map_file.close();
 	graph.print();
 return 0;
 	int ret = 0;
 	int size = SIZE;
 	//graph = circleGraph(size);
-	graph = setupHalfConnectedGraph(size);
+	//graph = setupHalfConnectedGraph(size);
 
 	graph.print();
 	pthread_mutex_init(&work.lock, NULL);
@@ -579,6 +618,7 @@ return 0;
 	// file.close();
 
 	pthread_mutex_destroy(&work.lock);
+	map_file.close();
 	
 	//return 0;
 	pthread_exit(NULL);
