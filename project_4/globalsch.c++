@@ -221,7 +221,10 @@ public:
         }
 
         int getEdge(int node1, int node2) {
-                return 0;
+                for(int i = 0; i < (int) edges.size(); ++i) {
+                        if(edges[i].src == node1 && edges[i].dest == node2) return edges[i].length;
+                }
+                assert(false);
         }
 
         void setLabel(int node, int value) { label[node] = value; }

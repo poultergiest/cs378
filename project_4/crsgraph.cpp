@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cassert>
 #include <vector>
 #include <algorithm>
 #include <queue>
@@ -114,7 +115,10 @@ public:
 	}
 
 	int getEdge(int node1, int node2) {
-		return 0;
+		for(int i = 0; i < (int) edges.size(); ++i) {
+			if(edges[i].src == node1 && edges[i].dest == node2) return edges[i].length;
+		}
+		assert(false);
 	}
 
 	void setLabel(int node, int value) { label[node] = value; }
@@ -171,14 +175,14 @@ public:
 					continue;
 				}
 				if(edges[index].src == i && edges[index].dest == j) {
-					cout << "1 ";
+					cout << edges[index].length << " ";
 					index++;
 					continue;
 				}
 				cout << "0 ";
 			}
 			cout << endl;
-		}	
+		}
 	}
 
 	void printPtr() {
@@ -231,8 +235,7 @@ int sssp(CrsGraph& g, int source, int target) {
 		Node cur_node = work._Q2.top();
 		work._Q2.pop();
 		pthread_mutex_unlock(&work.lock);
-		cout << "here" << endl;
-		
+
 		vector<int> nbors = g.getNeighbors(cur_node.label);
 
 		//get locks for all neighbors
@@ -263,7 +266,7 @@ int sssp(CrsGraph& g, int source, int target) {
 
 CrsGraph setupGraphFromFile(ifstream& file) {
 	string line;
-	
+
 	while(getline(file, line))
 	{
 	    if(line[0] == 'p') break;
@@ -309,7 +312,7 @@ CrsGraph setupGraphFromFile(ifstream& file) {
 	return graph;
 }
 
-CrsGraph setupRingGrahp(int ring_size) {
+CrsGraph setupRingGraph(int ring_size) {
 	CrsGraph graph(ring_size);
 	for(int i = 0; i < ring_size-1; ++i) {
 		graph.addEdge(i, i+1, 5, false);
@@ -320,6 +323,10 @@ CrsGraph setupRingGrahp(int ring_size) {
 
 int main() {
 	ifstream map_file("map.gr");
-	CrsGraph graph = setupGraphFromFile(map_file);
+	//CrsGraph graph = setupGraphFromFile(map_file);
+	CrsGraph graph = setupRingGraph(10);
+	graph.printGraph();
+	int x = sssp(graph, 0, 9);
+	cout << "sssp: " << x << endl;
 	return 0;
 }
