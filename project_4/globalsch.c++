@@ -78,98 +78,6 @@ public:
 	pthread_mutex_t mutex;
 };
 
-class AdjGraph {
-	int _size;
-	vector<vector<int> > _g;
-	vector<Node> _nodes;
-public:
-	AdjGraph(int n) {
-		_size = n;
-		_nodes.resize(_size);
-		_g.resize(_size);
-
-		for(int i = 0; i < _size; ++i) {
-			_g[i].resize(_size);
-			_nodes[i].dist = INF;
-			_nodes[i].label = i;
-		}
-	}
-
-	Node& getNode(int node) {
-		return _nodes[node];
-	}
-
-	int getEdge(int node1, int node2) {
-		return _g[node1][node2];
-	}
-
-	void setEdge(int node1, int node2, int value) {
-		_g[node1][node2] = value;
-	}
-
-	int getDist(int node1) {
-		return _nodes[node1].dist;
-	}
-
-	void setDist(int node1, int value) {  // makes undirected graphs
-		_nodes[node1].dist = value;
-	}
-
-	void addNode(int x, int y) {
-		_size++;
-		_g.resize(_size);
-
-		_nodes.push_back(Node(_size-1, x, y));
-
-		for(int i = 0; i < _size; ++i) {
-			_g[i].resize(_size);
-		}
-	}
-
-	vector<int> getNeighbors(int node) {
-		vector<int> n;
-		for(int i = 0; i < _size; ++i) {
-			if(i == node) continue;
-			if(_g[node][i] > 0) {
-				n.push_back(i);
-			}
-		}
-		return n;
-	}
-
-	void getNodeLock(int node) {
-		_nodes[node].getLock();
-	}
-
-	void releaseNodeLock(int node) {
-		_nodes[node].releaseLock();
-	}
-
-	void getNeighborLocks(vector<int> nbors) {
-		for(int i = 0; i < (int) nbors.size(); ++i) {
-			assert(nbors[i] >= 0 && nbors[i] < _size);
-			_nodes[nbors[i]].getLock();
-		}
-	}
-
-	void releaseNeighborLocks(vector<int> nbors) {
-		for(int i = (int)nbors.size()-1; i >= 0; --i) {
-			/*cout << "index " << nbors[i] << "size " << (int)nbors.size() << endl;*/
-			assert(nbors[i] >= 0 && nbors[i] < _size);
-			_nodes[nbors[i]].releaseLock();
-		}
-	}
-
-	void print() {
-		for(int x = 0; x < _size; ++x) {
-			for(int y = 0; y < _size; ++y) {
-				cout << getEdge(x,y) << " ";
-			}
-			cout << endl;
-		}
-	}
-};
-
 class CrsGraph {
         int _size;
         vector<int> label;
@@ -298,8 +206,6 @@ public:
         }
 };
 
-
-
 class nodeComparison {
 public:
 	bool operator() (const Node& lhs, const Node& rhs) const {
@@ -317,64 +223,7 @@ public:
 };
 thread_safe_node_queue work;
 
-int sssp(AdjGraph& g, int source, int target) {
-	g.setDist(source, 0);
-	pthread_mutex_lock(&work.lock);
-	Node& s = g.getNode(source);
-	work._Q2.push(s);
-	pthread_mutex_unlock(&work.lock);
-
-	int counter = 0;
-
-	while(true) {
-		pthread_mutex_lock(&work.lock);
-		if (work._Q2.empty()) {
-			break;
-			counter++;
-			pthread_mutex_unlock(&work.lock);
-			if(counter > 100) {
-				break;
-			}
-			usleep(5000);
-			continue;
-		}
-
-		counter = 0;
-		Node cur_node = work._Q2.top();
-		work._Q2.pop();
-		pthread_mutex_unlock(&work.lock);
-		cout << "here" << endl;
-		
-		vector<int> nbors = g.getNeighbors(cur_node.label);
-
-		//get locks for all neighbors
-		g.getNodeLock(cur_node.label);
-		g.getNeighborLocks(nbors);
-		cout << "here" << endl;
-		for (int i = 0; i < (int) nbors.size(); ++i)
-		{
-			int n_ind = nbors[i];
-			int new_dist = g.getDist(cur_node.label) + g.getEdge(cur_node.label, n_ind);
-
-			if(new_dist < g.getDist(n_ind)) {
-				g.setDist(n_ind, new_dist);
-
-				Node& n = g.getNode(n_ind);
-				pthread_mutex_lock(&work.lock);
-				work._Q2.push(n);
-				pthread_mutex_unlock(&work.lock);
-			}
-		}
-
-		//release locks for all neighbors
-		g.releaseNeighborLocks(nbors);
-		cout << "here20" << endl;
-		g.releaseNodeLock(cur_node.label);
-	}
-	return g.getNode(target).dist;
-}
-
-int crs_sssp(CrsGraph& g, int source, int target) {
+int sssp(CrsGraph& g, int source, int target) {
         g.setDist(source, 0);
         pthread_mutex_lock(&work.lock);
         Node& s = g.getNode(source);
@@ -402,9 +251,11 @@ int crs_sssp(CrsGraph& g, int source, int target) {
                 pthread_mutex_unlock(&work.lock);
 
                 vector<int> nbors = g.getNeighbors(cur_node.label);
-		//get locks for all neighbors
+
+				//get locks for all neighbors
                 g.getNodeLock(cur_node.label);
                 //g.getNeighborLocks(nbors);
+
                 //cout << "here" << endl;
                 for (int i = 0; i < (int) nbors.size(); ++i)
                 {
@@ -429,7 +280,7 @@ int crs_sssp(CrsGraph& g, int source, int target) {
 }
 
 
-AdjGraph graph(0);
+CrsGraph graph(0);
 
 void *ThreadProc(void *threadid)
 {
@@ -440,7 +291,7 @@ void *ThreadProc(void *threadid)
 
 	timespec start, end, res;
 
-	AdjGraph& g = graph;
+	CrsGraph& g = graph;
 
 	int counter = 0;
 
@@ -459,36 +310,36 @@ void *ThreadProc(void *threadid)
 		}
 
 		counter = 0;
-		Node cur_node = work._Q2.top();
-		work._Q2.pop();
-		pthread_mutex_unlock(&work.lock);
-		
-		vector<int> nbors = g.getNeighbors(cur_node.label);
+        Node cur_node = work._Q2.top();
+        work._Q2.pop();
+        pthread_mutex_unlock(&work.lock);
+
+        vector<int> nbors = g.getNeighbors(cur_node.label);
 
 		//get locks for all neighbors
-		g.getNodeLock(cur_node.label);
-		/*g.getNeighborLocks(nbors);*/
+        g.getNodeLock(cur_node.label);
+        //g.getNeighborLocks(nbors);
 
-		for (int i = 0; i < (int) nbors.size(); ++i)
-		{
-			int n_ind = nbors[i];
-			g.getNodeLock(n_ind);
-			int new_dist = g.getDist(cur_node.label) + g.getEdge(cur_node.label, n_ind);
+        for (int i = 0; i < (int) nbors.size(); ++i)
+        {
+                int n_ind = nbors[i];
+                // g.getNodeLock(n_ind);
+                int new_dist = g.getDist(cur_node.label) + g.getEdge(cur_node.label, n_ind);
 
-			if(new_dist < g.getDist(n_ind)) {
-				g.setDist(n_ind, new_dist);
+                if(new_dist < g.getDist(n_ind)) {
+                        g.setDist(n_ind, new_dist);
 
-				Node& n = g.getNode(n_ind);
-				pthread_mutex_lock(&work.lock);
-				work._Q2.push(n);
-				pthread_mutex_unlock(&work.lock);
-			}
-			g.releaseNodeLock(n_ind);
-		}
+                        Node& n = g.getNode(n_ind);
+                        pthread_mutex_lock(&work.lock);
+                        work._Q2.push(n);
+                        pthread_mutex_unlock(&work.lock);
+                }
+                // g.releaseNodeLock(n_ind);
+        }
 
-		//release locks for all neighbors
-		/*g.releaseNeighborLocks(nbors);*/
-		g.releaseNodeLock(cur_node.label);
+        //release locks for all neighbors
+        //g.releaseNeighborLocks(nbors);
+        g.releaseNodeLock(cur_node.label);
 	}
 	clock_gettime(CLOCK_MONOTONIC, &end);
 
@@ -496,13 +347,13 @@ void *ThreadProc(void *threadid)
 	pthread_exit(NULL);
 }
 
-AdjGraph circleGraph(int s) {
-	AdjGraph ring(s);
-	for(int n = 0; n < s-1; ++n) {
-		ring.setEdge(n, n+1, 1);
+CrsGraph setupRingGraph(int ring_size) {
+	CrsGraph graph(ring_size);
+	for(int i = 0; i < ring_size-1; ++i) {
+		graph.addEdge(i, i+1, 5, false);
 	}
-	ring.setEdge(s-1, 0, 1);
-	return ring;
+	graph.addEdge(ring_size-1, 0, 5, true);
+	return graph;
 }
 
 CrsGraph setupGraphFromFile(ifstream& file) {
@@ -557,37 +408,24 @@ int main(int argc, char * argv[]) {
 	pthread_t threads[NUM_THREADS];
 
 	ifstream map_file("map.gr");
+	graph = setupGraphFromFile(map_file);
 	//graph = setupGraphFromFile(map_file);
 	map_file.close();
-	graph.print();
-return 0;
+
 	int ret = 0;
 	int size = SIZE;
 	//graph = circleGraph(size);
-	//graph = setupHalfConnectedGraph(size);
 
-	graph.print();
 	pthread_mutex_init(&work.lock, NULL);
-	/*int v = sssp(graph, 0, 9);
-	cout << "res: " << v << endl;*/
-	/*return 0;*/
-
-	Node& s = graph.getNode(0);
-	s.dist = 0;
-	work._Q2.push(s);
-	//cout << "Result " << v << endl;
-
 	pthread_attr_t attr;
 
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
-
 	int t;
 	
 
 	for(t = 0; t < NUM_THREADS; ++t) {
-	//printf("In main: creating thread %d\n", t);
 		ret = pthread_create(&threads[t], &attr, ThreadProc, (void*)t);
 		usleep(1000);
 		if(ret) {
@@ -618,8 +456,7 @@ return 0;
 	// file.close();
 
 	pthread_mutex_destroy(&work.lock);
-	map_file.close();
-	
+
 	//return 0;
 	pthread_exit(NULL);
 }
