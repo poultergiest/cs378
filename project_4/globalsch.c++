@@ -14,7 +14,7 @@
 
 using namespace std;
 
-#define NUM_THREADS 5
+#define NUM_THREADS 40
 #define SIZE 20
 
 #define INF (INT_MAX-50000)
@@ -286,9 +286,6 @@ void *ThreadProc(void *threadid)
 {
 	long tid;
 	tid = (long)threadid;
-
-	cout << "hello from thread: " << tid << endl;
-
 	timespec start, end, res;
 
 	CrsGraph& g = graph;
@@ -302,7 +299,7 @@ void *ThreadProc(void *threadid)
 		if (work._Q2.empty()) {
 			counter++;
 			pthread_mutex_unlock(&work.lock);
-			if(counter > 500) {
+			if(counter > 200) {
 				break;
 			}
 			usleep(5000);
@@ -316,14 +313,11 @@ void *ThreadProc(void *threadid)
 
         vector<int> nbors = g.getNeighbors(cur_node.label);
 
-		//get locks for all neighbors
         g.getNodeLock(cur_node.label);
-        //g.getNeighborLocks(nbors);
-
         for (int i = 0; i < (int) nbors.size(); ++i)
         {
                 int n_ind = nbors[i];
-                // g.getNodeLock(n_ind);
+                 g.getNodeLock(n_ind);
                 int new_dist = g.getDist(cur_node.label) + g.getEdge(cur_node.label, n_ind);
 
                 if(new_dist < g.getDist(n_ind)) {
@@ -334,11 +328,8 @@ void *ThreadProc(void *threadid)
                         work._Q2.push(n);
                         pthread_mutex_unlock(&work.lock);
                 }
-                // g.releaseNodeLock(n_ind);
+                 g.releaseNodeLock(n_ind);
         }
-
-        //release locks for all neighbors
-        //g.releaseNeighborLocks(nbors);
         g.releaseNodeLock(cur_node.label);
 	}
 	clock_gettime(CLOCK_MONOTONIC, &end);
@@ -444,11 +435,13 @@ int main(int argc, char * argv[]) {
 		}
 	}
 
-	printf("Threads completed: %d\n\nWriting runtimes\n", NUM_THREADS);
+	printf("Threads completed: %d\n", NUM_THREADS);
 
-	int dist = graph.getDist(size-1);
+	srand(time(NULL));
+	int randTarget = rand() % graph.getSize();
+	int dist = graph.getDist(randTarget);
 
-	cout << "Distance to target: " << dist << endl;
+	cout << "Target: " << randTarget << " Distance to target: " << dist << endl;
 
 	// ofstream file;
 	// file.open("datastuffthing.txt", ios::out | ios::app);
