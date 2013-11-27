@@ -14,7 +14,7 @@
 
 using namespace std;
 
-#define NUM_THREADS 40
+#define MAX_THREADS 61
 #define SIZE 20
 
 #define INF (INT_MAX-50000)
@@ -105,6 +105,12 @@ public:
                         while(index < _size && edges[index].src <= i) index++;
                         ptr[i] = index;
                 }
+        }
+
+        void reset() {
+            for(int i = 0; i < _nodes.size(); ++i) {
+                _nodes[i].dist = INF;
+            }
         }
 
         void printEdges() {
@@ -222,6 +228,11 @@ public:
 
 };
 thread_safe_node_queue work;
+thread_safe_node_queue per_thread_work[MAX_THREADS];
+
+bool still_working[MAX_THREADS];
+
+timespec runtimes[MAX_THREADS];
 
 int sssp(CrsGraph& g, int source, int target) {
         g.setDist(source, 0);
@@ -238,7 +249,7 @@ int sssp(CrsGraph& g, int source, int target) {
                         break;
                         counter++;
                         pthread_mutex_unlock(&work.lock);
-                        if(counter > 100) {
+                        if(counter > 200) {
                                 break;
                         }
                         usleep(5000);
@@ -279,6 +290,21 @@ int sssp(CrsGraph& g, int source, int target) {
 	return g.getNode(target).dist;
 }
 
+void initRTS() {
+    for(int i = 0; i < MAX_THREADS; ++i) {
+        runtimes[i].tv_nsec = 0;
+        runtimes[i].tv_sec = 0;
+        still_working[i] = true;
+        pthread_mutex_init(&per_thread_work[i].lock, NULL);
+    }
+}
+
+void destroyLocks() {
+    for(int i = 0; i < MAX_THREADS; ++i) {
+        pthread_mutex_destroy(&per_thread_work[i].lock);
+    }
+}
+
 
 CrsGraph graph(0);
 
@@ -287,6 +313,8 @@ void *ThreadProc(void *threadid)
 	long tid;
 	tid = (long)threadid;
 	timespec start, end, res;
+
+    thread_safe_node_queue local;
 
 	CrsGraph& g = graph;
 
@@ -299,7 +327,7 @@ void *ThreadProc(void *threadid)
 		if (work._Q2.empty()) {
 			counter++;
 			pthread_mutex_unlock(&work.lock);
-			if(counter > 200) {
+			if(counter > 100) {
 				break;
 			}
 			usleep(5000);
@@ -317,7 +345,6 @@ void *ThreadProc(void *threadid)
         for (int i = 0; i < (int) nbors.size(); ++i)
         {
                 int n_ind = nbors[i];
-                 g.getNodeLock(n_ind);
                 int new_dist = g.getDist(cur_node.label) + g.getEdge(cur_node.label, n_ind);
 
                 if(new_dist < g.getDist(n_ind)) {
@@ -328,14 +355,194 @@ void *ThreadProc(void *threadid)
                         work._Q2.push(n);
                         pthread_mutex_unlock(&work.lock);
                 }
-                 g.releaseNodeLock(n_ind);
         }
         g.releaseNodeLock(cur_node.label);
 	}
 	clock_gettime(CLOCK_MONOTONIC, &end);
 
 	res = diff(start, end);
+    runtimes[tid].tv_sec = res.tv_sec;
+    runtimes[tid].tv_nsec = res.tv_nsec;
 	pthread_exit(NULL);
+}
+
+int CUR_THREADS = 0;
+
+void *ThreadProc2(void *threadid)
+{
+    long tid;
+    tid = (long)threadid;
+    timespec start, end, res;
+
+    CrsGraph& g = graph;
+
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    while(true) {
+        //cout << "hello from thread: " << tid << endl;
+        pthread_mutex_lock(&(per_thread_work[tid].lock));
+        
+        if (per_thread_work[tid]._Q2.empty()) {
+            if(CUR_THREADS == 1) {
+                pthread_mutex_unlock(&(per_thread_work[tid].lock));
+                break;
+            }
+            //steal
+            bool stole = false;
+            
+            if(tid > 0 && still_working[tid-1]) {
+                // guy to left has work, steal
+                pthread_mutex_lock(&per_thread_work[tid-1].lock);
+                if(per_thread_work[tid-1]._Q2.size() > 20) {
+                    Node cur_node = per_thread_work[tid-1]._Q2.top();
+                    Node& n = g.getNode(cur_node.label);
+                    per_thread_work[tid-1]._Q2.pop();
+                    per_thread_work[tid]._Q2.push(n);
+                    stole = true;
+                }
+                pthread_mutex_unlock(&per_thread_work[tid-1].lock);
+            }
+
+            if(tid < CUR_THREADS && still_working[tid+1]) {
+                // guy to left has work, steal
+                pthread_mutex_lock(&per_thread_work[tid+1].lock);
+                if(per_thread_work[tid+1]._Q2.size() > 20) {
+                    Node cur_node = per_thread_work[tid+1]._Q2.top();
+                    Node& n = g.getNode(cur_node.label);
+                    per_thread_work[tid+1]._Q2.pop();
+                    per_thread_work[tid]._Q2.push(n);
+                    stole = true;
+                }
+                pthread_mutex_unlock(&per_thread_work[tid+1].lock);
+            }
+
+            if(stole) {
+                still_working[tid] = true;
+            } else {
+                still_working[tid] = false;
+                bool work_to_do = false;
+                for(int i = 0; i < CUR_THREADS; ++i) {
+                    if(still_working[i]) {
+                        work_to_do = true;
+                        pthread_mutex_unlock(&per_thread_work[tid].lock);
+                        break;
+                    }
+                }
+                pthread_mutex_unlock(&per_thread_work[tid].lock);
+                if(work_to_do) {
+                    usleep(5000);
+                    continue;
+                } else {
+                    break;
+                }
+            }
+            // end steal
+            pthread_mutex_unlock(&per_thread_work[tid].lock);\
+        }
+
+        still_working[tid] = true;
+        Node cur_node = per_thread_work[tid]._Q2.top();
+        per_thread_work[tid]._Q2.pop();
+        pthread_mutex_unlock(&per_thread_work[tid].lock);
+
+        vector<int> nbors = g.getNeighbors(cur_node.label);
+
+        g.getNodeLock(cur_node.label);
+
+        for (int i = 0; i < (int) nbors.size(); ++i)
+        {
+                int n_ind = nbors[i];
+                int new_dist = g.getDist(cur_node.label) + g.getEdge(cur_node.label, n_ind);
+
+                if(new_dist < g.getDist(n_ind)) {
+                        g.setDist(n_ind, new_dist);
+
+                        Node& n = g.getNode(n_ind);
+                        pthread_mutex_lock(&per_thread_work[tid].lock);
+                        per_thread_work[tid]._Q2.push(n);
+                        pthread_mutex_unlock(&per_thread_work[tid].lock);
+                }
+        }
+        g.releaseNodeLock(cur_node.label);
+    }
+    clock_gettime(CLOCK_MONOTONIC, &end);
+
+    res = diff(start, end);
+    runtimes[tid].tv_sec = res.tv_sec;
+    runtimes[tid].tv_nsec = res.tv_nsec;
+    pthread_exit(NULL);
+}
+
+void *ThreadProc3(void *threadid)
+{
+    long tid;
+    tid = (long)threadid;
+    timespec start, end, res;
+
+    CrsGraph& g = graph;
+
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    while(true) {
+        //cout << "hello from thread: " << tid << endl;
+        pthread_mutex_lock(&(per_thread_work[tid].lock));
+        
+        if (per_thread_work[tid]._Q2.empty()) {
+            if(CUR_THREADS == 1) {
+                pthread_mutex_unlock(&(per_thread_work[tid].lock));
+                break;
+            }
+
+            still_working[tid] = false;
+            bool work_to_do = false;
+            for(int i = 0; i < CUR_THREADS; ++i) {
+                if(still_working[i]) {
+                    work_to_do = true;
+                    pthread_mutex_unlock(&per_thread_work[tid].lock);
+                    break;
+                }
+            }
+            pthread_mutex_unlock(&per_thread_work[tid].lock);
+            if(work_to_do) {
+                usleep(500);
+                continue;
+            } else {
+                break;
+            }
+            
+            pthread_mutex_unlock(&per_thread_work[tid].lock);\
+        }
+
+        still_working[tid] = true;
+        Node cur_node = per_thread_work[tid]._Q2.top();
+        per_thread_work[tid]._Q2.pop();
+        pthread_mutex_unlock(&per_thread_work[tid].lock);
+
+        vector<int> nbors = g.getNeighbors(cur_node.label);
+
+        g.getNodeLock(cur_node.label);
+
+        for (int i = 0; i < (int) nbors.size(); ++i)
+        {
+                int n_ind = nbors[i];
+                int new_dist = g.getDist(cur_node.label) + g.getEdge(cur_node.label, n_ind);
+
+                if(new_dist < g.getDist(n_ind)) {
+                        g.setDist(n_ind, new_dist);
+
+                        Node& n = g.getNode(n_ind);
+                        pthread_mutex_lock(&per_thread_work[n_ind%CUR_THREADS].lock);
+                        still_working[n_ind%CUR_THREADS] = true;
+                        per_thread_work[n_ind%CUR_THREADS]._Q2.push(n);
+                        pthread_mutex_unlock(&per_thread_work[n_ind%CUR_THREADS].lock);
+                }
+        }
+        g.releaseNodeLock(cur_node.label);
+    }
+    clock_gettime(CLOCK_MONOTONIC, &end);
+
+    res = diff(start, end);
+    runtimes[tid].tv_sec = res.tv_sec;
+    runtimes[tid].tv_nsec = res.tv_nsec;
+    pthread_exit(NULL);
 }
 
 CrsGraph setupRingGraph(int ring_size) {
@@ -396,59 +603,73 @@ CrsGraph setupGraphFromFile(ifstream& file) {
 }
 
 int main(int argc, char * argv[]) {
-	pthread_t threads[NUM_THREADS];
+	pthread_t threads[MAX_THREADS ];
 
 	ifstream map_file("map.gr");
 	graph = setupGraphFromFile(map_file);
-	//graph = setupGraphFromFile(map_file);
 	map_file.close();
 
 	int ret = 0;
 	int size = SIZE;
-	//graph = circleGraph(size);
 
 	pthread_mutex_init(&work.lock, NULL);
+    
 	pthread_attr_t attr;
 
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
 	int t;
-	
+    timespec start, end, res;
 
-	for(t = 0; t < NUM_THREADS; ++t) {
-		ret = pthread_create(&threads[t], &attr, ThreadProc, (void*)t);
-		usleep(1000);
-		if(ret) {
-			printf("Error: %d\n", ret);
+    ofstream file;
+    file.open("datastuffthing.txt", ios::out | ios::app);
 
-			return -1;
-		}
-	}
-	pthread_attr_destroy(&attr);
-	
-	for(t=0; t < NUM_THREADS; ++t) {
-		ret = pthread_join(threads[t], NULL);
-		if(ret) {
-			printf("JOIN ERROR: %d\n", ret);
-			return -1;
-		}
-	}
+    for(int NUM_THREADS = 1; NUM_THREADS < MAX_THREADS; NUM_THREADS++) {
+        //cout << "threads: " << NUM_THREADS << endl;
+        graph.reset();
+        initRTS();
+    	CUR_THREADS = NUM_THREADS;
+        graph.setDist(0, 0);
+        Node& s = graph.getNode(0);
+        work._Q2.push(s);
+        per_thread_work[0]._Q2.push(s);
+        still_working[0] = true;
 
-	printf("Threads completed: %d\n", NUM_THREADS);
+        clock_gettime(CLOCK_MONOTONIC, &start);
+    	for(t = 0; t < NUM_THREADS; ++t) {
+    		// ret = pthread_create(&threads[t], &attr, ThreadProc1, (void*)t);
+            // ret = pthread_create(&threads[t], &attr, ThreadProc2, (void*)t);
+            ret = pthread_create(&threads[t], &attr, ThreadProc3, (void*)t);
+    		usleep(50);
+    		if(ret) {
+    			printf("Error: %d\n", ret);
 
-	srand(time(NULL));
-	int randTarget = rand() % graph.getSize();
-	int dist = graph.getDist(randTarget);
+    			return -1;
+    		}
+    	}
+    	pthread_attr_destroy(&attr);
+    	
+    	for(t=0; t < NUM_THREADS; ++t) {
+    		ret = pthread_join(threads[t], NULL);
+    		if(ret) {
+    			printf("JOIN ERROR: %d\n", ret);
+    			return -1;
+    		}
+    	}
+        clock_gettime(CLOCK_MONOTONIC, &end);
+        res = diff(start, end);
 
-	cout << "Target: " << randTarget << " Distance to target: " << dist << endl;
+        //cout << "dist: " << graph.getDist(1) << endl;
+        
+        file << (res.tv_sec * 1000000000) + res.tv_nsec << endl;
+        cout << (res.tv_sec * 1000000000) + res.tv_nsec << endl;
+    }
 
-	// ofstream file;
-	// file.open("datastuffthing.txt", ios::out | ios::app);
-	// file << "hey" << endl;
-	// file.close();
+	file.close();
 
 	pthread_mutex_destroy(&work.lock);
+    destroyLocks();
 
 	//return 0;
 	pthread_exit(NULL);
