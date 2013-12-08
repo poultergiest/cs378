@@ -5,20 +5,19 @@
 //  Name: CTimer.h
 //
 //  Author: Mat Buckland 2002
-//
+//  Co-Authors: Jake Wilke / Ethan Poulter
 //	Desc: Windows timer class
 //
 //-----------------------------------------------------------------------
 
-#include <windows.h>
-
+#include <time.h>
 
 class CTimer
 {
 
 private:
 
-	LONGLONG	m_CurrentTime,
+	long long	m_CurrentTime,
 	          m_LastTime,
 				    m_NextTime,
 				    m_FrameTime,
