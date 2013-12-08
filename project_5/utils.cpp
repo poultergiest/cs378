@@ -48,3 +48,35 @@ void Clamp(double &arg, double min, double max)
 		arg = max;
 	}
 }
+
+
+bool init_app(const char * name, SDL_Surface * icon, uint32_t flags)
+{
+  atexit(SDL_Quit);
+  if(SDL_Init(flags) < 0)
+    return 0;
+
+  SDL_WM_SetCaption(name, name);
+  SDL_WM_SetIcon(icon, NULL);
+
+  return 1;
+}
+
+static void init_data(struct rgbData data[][WIDTH])
+{
+  memset(data, 255, WIDTH*HEIGHT*sizeof(rgbData));
+}
+
+static void render(SDL_Surface * sf)
+{
+  SDL_Surface * screen = SDL_GetVideoSurface();
+  if(SDL_BlitSurface(sf, NULL, screen, NULL) == 0)
+    SDL_UpdateRect(screen, 0, 0, 0, 0);
+}
+
+static int filter(const SDL_Event * event)
+{ 
+	if (event->type == SDL_QUIT)
+		doExit = true;
+	return event->type == SDL_QUIT;
+}
