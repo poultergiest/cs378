@@ -8,6 +8,9 @@
 #include <iostream>
 #include <vector>
 
+const int WIDTH = 1024;
+const int HEIGHT = 1024;
+
 using namespace std;
 
 //----------------------------------------------------------------------------
@@ -46,6 +49,13 @@ string ftos (float arg);
 //	clamps the first argument between the second two
 void Clamp(double &arg, double min, double max);
 
+
+// SDL HELPERS
+bool init_app(const char * name, SDL_Surface * icon, uint32_t flags);
+static void init_data(struct rgbData data[][WIDTH]);
+static void render(SDL_Surface * sf);
+static int filter(const SDL_Event * event);
+
 /////////////////////////////////////////////////////////////////////
 //
 //	Point structure
@@ -58,8 +68,6 @@ struct SPoint
 	SPoint(){}
 	SPoint(float a, float b):x(a),y(b){}
 };
-
-
 
 
 #endif
