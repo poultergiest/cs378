@@ -47,13 +47,15 @@ CTimer::CTimer(float fps): m_FPS(fps), m_TimeElapsed(0.0f)
 //--------------------------------------------------------------------------
 void CTimer::Start()
 {
-	/*//get the time
+	//get the time
 	//QueryPerformanceCounter( (LARGE_INTEGER*) &m_LastTime);
-	clock_gettime(CLOCK_REALTIME_HR, &m_LastTime);
+	timespec temp;
+	clock_gettime(CLOCK_REALTIME, &temp);
+	m_LastTime = temp.tv_sec*1000000 + temp.tv_nsec;
 	//update time to render next frame
 	m_NextTime = m_LastTime + m_FrameTime;
 
-	return;*/
+	return;
 }
 
 //-------------------------ReadyForNextFrame()-------------------------------
@@ -64,14 +66,17 @@ void CTimer::Start()
 //----------------------------------------------------------------------------
 bool CTimer::ReadyForNextFrame()
 {
-	/*if (!m_FPS)
+	if (!m_FPS)
   {
     //MessageBox(NULL, "No FPS set in timer", "Doh!", 0);
-
+  	assert(false);
     return false;
   }
   
   //QueryPerformanceCounter( (LARGE_INTEGER*) &m_CurrentTime);
+  timespec temp;
+  clock_gettime(CLOCK_REALTIME, &temp);
+  m_LastTime = temp.tv_sec*1000000 + temp.tv_nsec;
 
 	if (m_CurrentTime > m_NextTime)
 	{
@@ -85,7 +90,7 @@ bool CTimer::ReadyForNextFrame()
 		return true;
 	}
 
-	return false;*/
+	return false;
 }
 
 //--------------------------- TimeElapsed --------------------------------
@@ -96,32 +101,28 @@ bool CTimer::ReadyForNextFrame()
 //-------------------------------------------------------------------------
 double CTimer::TimeElapsed()
 {
-	/*//QueryPerformanceCounter( (LARGE_INTEGER*) &m_CurrentTime);
-	
+	//QueryPerformanceCounter( (LARGE_INTEGER*) &m_CurrentTime);
+	timespec temp;
+  	clock_gettime(CLOCK_REALTIME, &temp);
+  	m_CurrentTime = temp.tv_sec*1000000 + temp.tv_nsec;
+
+
 	m_TimeElapsed	= (m_CurrentTime - m_LastTime) * m_TimeScale;
 	
 	m_LastTime		= m_CurrentTime;
 
 	return m_TimeElapsed;
-		*/
+		
 }
 
-/*timespec CTimer::TimeElapsed(timespec start, timespec end)
-{
-	timespec temp;
-	if ((end.tv_nsec-start.tv_nsec)<0) {
-		temp.tv_sec = end.tv_sec-start.tv_sec-1;
-		temp.tv_nsec = 1000000000+end.tv_nsec-start.tv_nsec;
-	} else {
-		temp.tv_sec = end.tv_sec-start.tv_sec;
-		temp.tv_nsec = end.tv_nsec-start.tv_nsec;
-	}
-	return temp;
-}
-*/
 
-
-int main() {
+/*int main() {
 	CTimer x;
+	x.Start();
+	for (int i = 0; i < 30; ++i)
+	{
+		sleep(1);
+	}
+	cout << x.TimeElapsed();
 	return 0;
-}
+}*/
