@@ -11,17 +11,18 @@
 //-----------------------------------------------------------------------
 
 #include <time.h>
+#include <iostream>
 
 class CTimer
 {
 
 private:
 
-	long long	m_CurrentTime,
-	          m_LastTime,
-				    m_NextTime,
-				    m_FrameTime,
-				    m_PerfCountFreq;
+	timespec		m_CurrentTime,
+	         		m_LastTime,
+				    m_NextTime;
+	long long		m_FrameTime,
+					m_PerfCountFreq;
 
 	double		m_TimeElapsed,
 				    m_TimeScale;
