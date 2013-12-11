@@ -62,21 +62,14 @@ bool init_app(const char * name, SDL_Surface * icon, uint32_t flags)
   return 1;
 }
 
-static void init_data(struct rgbData data[][WIDTH])
+void init_data(struct rgbData data[][WIDTH])
 {
   memset(data, 255, WIDTH*HEIGHT*sizeof(rgbData));
 }
 
-static void render(SDL_Surface * sf)
+void render(SDL_Surface * sf)
 {
   SDL_Surface * screen = SDL_GetVideoSurface();
   if(SDL_BlitSurface(sf, NULL, screen, NULL) == 0)
     SDL_UpdateRect(screen, 0, 0, 0, 0);
-}
-
-static int filter(const SDL_Event * event)
-{ 
-	if (event->type == SDL_QUIT)
-		doExit = true;
-	return event->type == SDL_QUIT;
 }

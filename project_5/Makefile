@@ -4,7 +4,7 @@
 CC = g++
 CFLAGS = -O3
 TARGET = final.out
-SOURCE = main2.cpp
+SOURCE = main2.cpp utils.cpp
 
 ###########################################################
 
