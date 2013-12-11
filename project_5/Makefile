@@ -7,6 +7,7 @@ SOURCE = main2.cpp utils.cpp
 CSOURCE = CMineSweeper.cpp
 PSOURCE = CParams.cpp
 TSOURCE = CTimer.cpp
+NETSOURCE = CNeuralNet.cpp
 OSOURCE = CMineSweeper.cpp SVector2D.h CController.cpp CGenAlg.cpp C2DMatrix.cpp
 
 ###########################################################
@@ -26,6 +27,10 @@ cparams: ${PSOURCE}
 ctimer: ${TSOURCE}
 	clear
 	${CC} ${CFLAGS} -c ${TSOURCE}
+
+cnet: ${NETSOURCE}
+	clear
+	${CC} ${CFLAGS} -c ${NETSOURCE}
 
 clean:
 	rm -f *.out {TARGET}
