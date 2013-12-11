@@ -7,12 +7,30 @@
 
 
 #include "utils.h"
-//#include "CController.h"
-//#include "CTimer.h"
+#include "CController.h"
+#include "CTimer.h"
 #include "resource.h"
 #include "CParams.h"
 
 using namespace std;
+
+///////////////////////GLOBALS ////////////////////////////////////
+
+//The controller class for this simulation
+CController*	g_pController	 = NULL; 
+
+//create an instance of the parameter class.
+CParams   g_Params;
+
+//---------------------------- Cleanup ----------------------------------
+//
+//	simply cleans up any memory issues when the application exits
+//-----------------------------------------------------------------------
+void Cleanup()
+{
+	if (g_pController)
+		delete g_pController;
+}
 
 bool doExit = false;
 

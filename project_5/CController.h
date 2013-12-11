@@ -14,9 +14,8 @@
 #include <sstream>
 #include <string>
 #include <fstream>
-#include <windows.h>
 
-#include "CMinesweeper.h"
+#include "CMineSweeper.h"
 #include "CGenAlg.h"
 #include "utils.h"
 #include "C2DMatrix.h"
@@ -66,13 +65,13 @@ private:
 
 
 	//pens we use for the stats
-	HPEN				m_RedPen;
+	/*HPEN				m_RedPen;
 	HPEN				m_BluePen;
 	HPEN				m_GreenPen;
-	HPEN				m_OldPen;
+	HPEN				m_OldPen;*/
 	
 	//handle to the application window
-	HWND				m_hwndMain;
+	//HWND				m_hwndMain;
 
 	//toggles the speed at which the simulation runs
 	bool				m_bFastRender;
@@ -88,18 +87,17 @@ private:
 
   //this function plots a graph of the average and best fitnesses
   //over the course of a run
-  void   PlotStats(HDC surface);
+  //void   PlotStats(HDC surface);
 
 public:
 
-	CController(HWND hwndMain);
+	CController(/*HWND hwndMain*/);
 
 	~CController();
 
-	void		Render(HDC surface);
+	//void		Render(HDC surface);
 
-	void		WorldTransform(vector<SPoint> &VBuffer,
-                         SVector2D      vPos);
+	void		WorldTransform(vector<SPoint> &VBuffer,SVector2D      vPos);
 	
 	bool		Update();
 

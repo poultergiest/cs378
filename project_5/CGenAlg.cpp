@@ -112,9 +112,9 @@ void CGenAlg::Crossover(const vector<double> &mum,
 
 	//determine a crossover point
 	int cp = RandInt(0, m_iChromoLength - 1);
-
+	int i = 0;
 	//create the offspring
-	for (int i=0; i<cp; ++i)
+	for (i=0; i<cp; ++i)
 	{
 		baby1.push_back(mum[i]);
 		baby2.push_back(dad[i]);

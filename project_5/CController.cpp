@@ -38,12 +38,12 @@ const SPoint mine[NumMineVerts] = {SPoint(-1, -1),
 //	initilaize the sweepers, their brains and the GA factory
 //
 //-----------------------------------------------------------------------
-CController::CController(HWND hwndMain): m_NumSweepers(CParams::iNumSweepers), 
+CController::CController(/*HWND hwndMain*/): m_NumSweepers(CParams::iNumSweepers), 
 										                     m_pGA(NULL),
 										                     m_bFastRender(false),
 										                     m_iTicks(0),
 										                     m_NumMines(CParams::iNumMines),
-										                     m_hwndMain(hwndMain),
+										                     /*m_hwndMain(hwndMain),*/
 										                     m_iGenerations(0),
                                          cxClient(CParams::WindowWidth),
                                          cyClient(CParams::WindowHeight)
@@ -66,7 +66,7 @@ CController::CController(HWND hwndMain): m_NumSweepers(CParams::iNumSweepers),
 
 	//Get the weights from the GA and insert into the sweepers brains
 	m_vecThePopulation = m_pGA->GetChromos();
-
+	int i = 0;
 	for (i=0; i<m_NumSweepers; i++)
 	
 		m_vecSweepers[i].PutWeights(m_vecThePopulation[i].vecWeights);
@@ -79,11 +79,11 @@ CController::CController(HWND hwndMain): m_NumSweepers(CParams::iNumSweepers),
 	}
 
 	//create a pen for the graph drawing
-	m_BluePen  = CreatePen(PS_SOLID, 1, RGB(0, 0, 255));
+	/*m_BluePen  = CreatePen(PS_SOLID, 1, RGB(0, 0, 255));
 	m_RedPen   = CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
 	m_GreenPen = CreatePen(PS_SOLID, 1, RGB(0, 150, 0));
 
-	m_OldPen	= NULL;
+	m_OldPen	= NULL;*/
 
 	//fill the vertex buffers
 	for (i=0; i<NumSweeperVerts; ++i)
@@ -109,10 +109,10 @@ CController::~CController()
     delete		m_pGA;
   }
 
-	DeleteObject(m_BluePen);
+	/*DeleteObject(m_BluePen);
 	DeleteObject(m_RedPen);
 	DeleteObject(m_GreenPen);
-	DeleteObject(m_OldPen);
+	DeleteObject(m_OldPen);*/
 }
 
 
@@ -159,7 +159,7 @@ bool CController::Update()
 			if (!m_vecSweepers[i].Update(m_vecMines))
 			{
 				//error in processing the neural net
-				MessageBox(m_hwndMain, "Wrong amount of NN inputs!", "Error", MB_OK);
+				/*MessageBox(m_hwndMain, "Wrong amount of NN inputs!", "Error", MB_OK);*/
 
 				return false;
 			}
@@ -218,7 +218,7 @@ bool CController::Update()
 //------------------------------------Render()--------------------------------------
 //
 //----------------------------------------------------------------------------------
-void CController::Render(HDC surface)
+/*void CController::Render(HDC surface)
 {
 	//render the stats
 	string s = "Generation:          " + itos(m_iGenerations);
@@ -309,13 +309,13 @@ void CController::Render(HDC surface)
     PlotStats(surface);
   }
 
-}
+}*/
 //--------------------------PlotStats-------------------------------------
 //
 //  Given a surface to draw on this function displays stats and a crude
 //  graph showing best and average fitness
 //------------------------------------------------------------------------
-void CController::PlotStats(HDC surface)
+/*void CController::PlotStats(HDC surface)
 {
     string s = "Best Fitness:       " + ftos(m_pGA->BestFitness());
 	  TextOut(surface, 5, 20, s.c_str(), s.size());
@@ -359,3 +359,4 @@ void CController::PlotStats(HDC surface)
     SelectObject(surface, m_OldPen);
 }
 
+*/
