@@ -7,7 +7,7 @@
 
 
 #include "utils.h"
-#include "CController.h"
+//#include "CController.h"
 #include "CTimer.h"
 #include "resource.h"
 #include "CParams.h"
@@ -17,7 +17,7 @@ using namespace std;
 ///////////////////////GLOBALS ////////////////////////////////////
 
 //The controller class for this simulation
-CController*	g_pController	 = NULL; 
+//CController*	g_pController	 = NULL; 
 
 //create an instance of the parameter class.
 CParams   g_Params;
@@ -28,8 +28,8 @@ CParams   g_Params;
 //-----------------------------------------------------------------------
 void Cleanup()
 {
-	if (g_pController)
-		delete g_pController;
+	/*if (g_pController)
+		delete g_pController;*/
 }
 
 bool doExit = false;
@@ -44,7 +44,7 @@ static int filter(const SDL_Event * event)
 int main(int argc, char **argv) {
 	struct rgbData buffer[HEIGHT][WIDTH];
 	bool ok =
-		init_app("SDL example", NULL, SDL_INIT_VIDEO) &&
+		init_app("Sweeper", NULL, SDL_INIT_VIDEO) &&
 		SDL_SetVideoMode(WIDTH, HEIGHT, 24, SDL_HWSURFACE);
 	assert(ok);
 

@@ -1,21 +1,31 @@
 ###########################################################
 # Project 2 Makefile
-
 CC = g++
 CFLAGS = -O3
 TARGET = final.out
-SOURCE = main2.cpp CMineSweeper.cpp SVector2D.h utils.cpp CController.cpp CGenAlg.cpp utils.cpp C2DMatrix.cpp CParams.cpp
+SOURCE = main2.cpp utils.cpp 
 CSOURCE = CMineSweeper.cpp
+PSOURCE = CParams.cpp
+TSOURCE = CTimer.cpp
+OSOURCE = CMineSweeper.cpp SVector2D.h CController.cpp CGenAlg.cpp C2DMatrix.cpp
 
 ###########################################################
 
 sweepers: ${SOURCE}
 	clear
-	${CC} ${CFLAGS} -o ${TARGET} ${SOURCE} -lrt -lSDL
+	${CC} ${CFLAGS} -o ${TARGET} CParams.o ${SOURCE} -lrt -lSDL
 
 controller: ${CSOURCE}
 	clear
 	${CC} ${CFLAGS} -c ${CSOURCE}
+
+cparams: ${PSOURCE}
+	clear
+	${CC} ${CFLAGS} -c ${PSOURCE}
+
+ctimer: ${TSOURCE}
+	clear
+	${CC} ${CFLAGS} -c ${TSOURCE}
 
 clean:
 	rm -f *.out {TARGET}
