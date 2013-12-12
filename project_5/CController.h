@@ -93,7 +93,7 @@ public:
 
 	~CController();
 
-	void		Render(SDL_Surface* surface);
+	void		Render(struct rgbData data[][WIDTH]);
 
 	void		WorldTransform(vector<SPoint> &VBuffer,SVector2D      vPos);
 	
@@ -109,4 +109,3 @@ public:
 
 
 #endif
-	
