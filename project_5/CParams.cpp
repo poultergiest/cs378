@@ -30,9 +30,9 @@ int CParams::iNumCopiesElite        = 0;
 
 //this function loads in the parameters from a given file name. Returns
 //false if there is a problem opening the file.
-bool CParams::LoadInParameters(char* szFileName)
+bool CParams::LoadInParameters(string szFileName)
 {
-  ifstream grab(szFileName);
+  ifstream grab(szFileName.c_str());
 
   //check file exists
   if (!grab)

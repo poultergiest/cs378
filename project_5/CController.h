@@ -24,8 +24,6 @@
 
 using namespace std;
 
-
-
 class CController
 {
 
@@ -71,7 +69,7 @@ private:
 	HPEN				m_OldPen;*/
 	
 	//handle to the application window
-	//HWND				m_hwndMain;
+	SDL_Surface*			m_surface;
 
 	//toggles the speed at which the simulation runs
 	bool				m_bFastRender;
@@ -91,11 +89,11 @@ private:
 
 public:
 
-	CController(/*HWND hwndMain*/);
+	CController(SDL_Surface* surface);
 
 	~CController();
 
-	//void		Render(HDC surface);
+	void		Render(/*HDC surface*/);
 
 	void		WorldTransform(vector<SPoint> &VBuffer,SVector2D      vPos);
 	

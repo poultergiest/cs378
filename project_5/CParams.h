@@ -83,8 +83,8 @@ public:
   //ctor
   CParams()
   {
-    string file = "params.ini";
-    if(!LoadInParameters("params.ini"))
+    string file_name = "params.ini";
+    if(!LoadInParameters(file_name))
     {
       //MessageBox(NULL, "Cannot find ini file!", "Error", 0);
       assert(false);
@@ -92,7 +92,7 @@ public:
 
   }
 
-  bool LoadInParameters(char* szFileName);
+  bool LoadInParameters(string szFileName);
 };
 
 

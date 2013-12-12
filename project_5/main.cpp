@@ -171,7 +171,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd,
 
 			EndPaint(hwnd, &ps);
 		} 
-			
 		break;
 
 		case WM_DESTROY: 

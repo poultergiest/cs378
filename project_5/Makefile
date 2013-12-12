@@ -14,7 +14,7 @@ OSOURCE = SVector2D.h
 
 sweepers: ${SOURCE}
 	clear
-	${CC} ${CFLAGS} -o ${TARGET} CTimer.o ${SOURCE} -lrt -lSDL
+	${CC} ${CFLAGS} -o ${TARGET} CTimer.o ${SOURCE} -lrt -lSDL -msse4
 
 controller: ${CSOURCE}
 	clear

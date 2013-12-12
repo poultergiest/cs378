@@ -38,15 +38,15 @@ const SPoint mine[NumMineVerts] = {SPoint(-1, -1),
 //	initilaize the sweepers, their brains and the GA factory
 //
 //-----------------------------------------------------------------------
-CController::CController(/*HWND hwndMain*/): m_NumSweepers(CParams::iNumSweepers), 
-										                     m_pGA(NULL),
-										                     m_bFastRender(false),
-										                     m_iTicks(0),
-										                     m_NumMines(CParams::iNumMines),
-										                     /*m_hwndMain(hwndMain),*/
-										                     m_iGenerations(0),
-                                         cxClient(CParams::WindowWidth),
-                                         cyClient(CParams::WindowHeight)
+CController::CController(SDL_Surface* surface): m_NumSweepers(CParams::iNumSweepers), 
+					m_pGA(NULL),
+					m_bFastRender(false),
+					m_iTicks(0),
+					m_NumMines(CParams::iNumMines),
+					m_surface(surface),
+					m_iGenerations(0),
+					cxClient(CParams::WindowWidth),
+					cyClient(CParams::WindowHeight)
 {
 	//let's create the mine sweepers
 	for (int i=0; i<m_NumSweepers; ++i)
@@ -218,10 +218,10 @@ bool CController::Update()
 //------------------------------------Render()--------------------------------------
 //
 //----------------------------------------------------------------------------------
-/*void CController::Render(HDC surface)
+void CController::Render(/*HDC surface*/)
 {
 	//render the stats
-	string s = "Generation:          " + itos(m_iGenerations);
+	/*string s = "Generation:          " + itos(m_iGenerations);
 	TextOut(surface, 5, 0, s.c_str(), s.size());
 
 	//do not render if running at accelerated speed
@@ -257,59 +257,60 @@ bool CController::Update()
 		for (i=0; i<m_NumSweepers; i++)
 		{
 			if (i == CParams::iNumElite)
-      {
-        SelectObject(surface, m_OldPen);
-      }
+			{
+			SelectObject(surface, m_OldPen);
+			}
       
-      //grab the sweeper vertices
-			vector<SPoint> sweeperVB = m_SweeperVB;
+	//grab the sweeper vertices
+	vector<SPoint> sweeperVB = m_SweeperVB;
 
-			//transform the vertex buffer
-			m_vecSweepers[i].WorldTransform(sweeperVB);
+	//transform the vertex buffer
+	m_vecSweepers[i].WorldTransform(sweeperVB);
 
-			//draw the sweeper left track
-			MoveToEx(surface, (int)sweeperVB[0].x, (int)sweeperVB[0].y, NULL);
+	//draw the sweeper left track
+	MoveToEx(surface, (int)sweeperVB[0].x, (int)sweeperVB[0].y, NULL);
 
-			for (int vert=1; vert<4; ++vert)
-			{
-				LineTo(surface, (int)sweeperVB[vert].x, (int)sweeperVB[vert].y);
-			}
+	for (int vert=1; vert<4; ++vert)
+	{
+		LineTo(surface, (int)sweeperVB[vert].x, (int)sweeperVB[vert].y);
+	}
 
-      LineTo(surface, (int)sweeperVB[0].x, (int)sweeperVB[0].y);
+	LineTo(surface, (int)sweeperVB[0].x, (int)sweeperVB[0].y);
 
-      //draw the sweeper right track
-			MoveToEx(surface, (int)sweeperVB[4].x, (int)sweeperVB[4].y, NULL);
+	//draw the sweeper right track
+	MoveToEx(surface, (int)sweeperVB[4].x, (int)sweeperVB[4].y, NULL);
 
-			for (vert=5; vert<8; ++vert)
-			{
-				LineTo(surface, (int)sweeperVB[vert].x, (int)sweeperVB[vert].y);
-			}
+	for (vert=5; vert<8; ++vert)
+	{
+		LineTo(surface, (int)sweeperVB[vert].x, (int)sweeperVB[vert].y);
+	}
 
-      LineTo(surface, (int)sweeperVB[4].x, (int)sweeperVB[4].y);
+	LineTo(surface, (int)sweeperVB[4].x, (int)sweeperVB[4].y);
 
-      MoveToEx(surface, (int)sweeperVB[8].x, (int)sweeperVB[8].y, NULL);
-      LineTo(surface, (int)sweeperVB[9].x, (int)sweeperVB[9].y);
+	MoveToEx(surface, (int)sweeperVB[8].x, (int)sweeperVB[8].y, NULL);
+	LineTo(surface, (int)sweeperVB[9].x, (int)sweeperVB[9].y);
 
-      MoveToEx(surface, (int)sweeperVB[10].x, (int)sweeperVB[10].y, NULL);
+	MoveToEx(surface, (int)sweeperVB[10].x, (int)sweeperVB[10].y, NULL);
 
-      for (vert=11; vert<16; ++vert)
-			{
-				LineTo(surface, (int)sweeperVB[vert].x, (int)sweeperVB[vert].y);
-			}
+	for (vert=11; vert<16; ++vert)
+	{
+		LineTo(surface, (int)sweeperVB[vert].x, (int)sweeperVB[vert].y);
+	}
 
-		}
+	}
 
-    //put the old pen back
-    SelectObject(surface, m_OldPen);
+	//put the old pen back
+	SelectObject(surface, m_OldPen);
 
 	}//end if
 
   else
   {
     PlotStats(surface);
-  }
+  }*/
 
-}*/
+}
+
 //--------------------------PlotStats-------------------------------------
 //
 //  Given a surface to draw on this function displays stats and a crude

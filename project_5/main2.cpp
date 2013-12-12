@@ -35,11 +35,35 @@ void Cleanup()
 bool doExit = false;
 SDL_Event event;
 
-static int filter(const SDL_Event * event)
+static void event_filter(const SDL_Event * event, SDL_Surface * data_sf)
 { 
 	if (event->type == SDL_QUIT)
 		doExit = true;
-	return event->type == SDL_QUIT;
+	if (event->type == SDL_KEYUP) {
+		switch( event->key.keysym.sym )
+                {
+                    case SDLK_ESCAPE: 
+                    	doExit = true;
+                    	break;
+                    case SDLK_f: 
+                    	g_pController->FastRenderToggle();
+                    	break;
+                    case SDLK_r: 
+                    	if (g_pController) {
+                    		delete g_pController;
+                    	}
+		        g_pController = new CController(data_sf);
+                    	break;
+                }
+	}
+}
+
+void init(SDL_Surface * data_sf) {
+	//seed the random number generator
+	srand(time(NULL));
+
+	//setup the controller
+	g_pController = new CController(data_sf);
 }
 
 int main(int argc, char **argv) {
@@ -51,9 +75,8 @@ int main(int argc, char **argv) {
 
 	SDL_Surface * data_sf = SDL_CreateRGBSurfaceFrom((char*)buffer, WIDTH, HEIGHT, 24, WIDTH * 3, 0x000000FF, 0x0000FF00, 0x00FF0000, 0);
 
-	SDL_SetEventFilter(filter);
-
 	init_data(buffer);
+	init(data_sf); // for the controller and other buffers
 
 	//create a timer
 	CTimer timer(CParams::iFramesPerSecond);
@@ -67,11 +90,11 @@ int main(int argc, char **argv) {
 	while (!bDone) {
 		while( SDL_PollEvent( &event ) )
         	{
-        		filter(&event);
+        		event_filter(&event, data_sf);
 	        	if(doExit) bDone = true;
         	}
 
-		if (timer.ReadyForNextFrame() /*|| g_pController->FastRender()*/)
+		if (timer.ReadyForNextFrame() || g_pController->FastRender())
 		{	
 			if(!g_pController->Update())
 			{
@@ -82,10 +105,8 @@ int main(int argc, char **argv) {
 			//render
 			render(data_sf);
 		}
-		
-		//SDL_Delay(1000/30);
 	}
-
+	SDL_FreeSurface( data_sf );
 	Cleanup();
 	return 0;
 }
