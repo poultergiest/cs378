@@ -6,7 +6,6 @@ TARGET = final.out
 SOURCE = main2.cpp utils.cpp CTimer.cpp CParams.cpp CController.cpp C2DMatrix.cpp CMineSweeper.cpp CGenAlg.cpp CNeuralNet.cpp
 CSOURCE = CController.cpp
 PSOURCE = CParams.cpp
-TSOURCE = CTimer.cpp
 NETSOURCE = CNeuralNet.cpp
 OSOURCE = SVector2D.h
 
@@ -14,15 +13,11 @@ OSOURCE = SVector2D.h
 
 sweepers: ${SOURCE}
 	clear
-	${CC} ${CFLAGS} -o ${TARGET} ${SOURCE} -lrt -lSDL -msse4
+	${CC} -o ${TARGET} ${SOURCE} -lrt -lSDL -msse4
 
 controller: ${CSOURCE}
 	clear
 	${CC} ${CFLAGS} -c ${CSOURCE}
-
-ctimer: ${TSOURCE}
-	clear
-	${CC} ${CFLAGS} -c ${TSOURCE}
 
 cnet: ${NETSOURCE}
 	clear

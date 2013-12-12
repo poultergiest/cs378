@@ -265,32 +265,51 @@ void CController::Render(struct rgbData data[][WIDTH])
 
 			//draw the sweeper left track
 			//MoveToEx(surface, (int)sweeperVB[0].x, (int)sweeperVB[0].y, NULL);
+			int oldx = (int)sweeperVB[0].x;
+			int oldy = (int)sweeperVB[0].y;
 			int vert = 1;
 			for (vert=1; vert<4; ++vert)
 			{
 				//LineTo(surface, (int)sweeperVB[vert].x, (int)sweeperVB[vert].y);
+				drawline(data, oldx, oldy, (int)sweeperVB[vert].x, (int)sweeperVB[vert].y, m_BluePen);
+				oldx = (int)sweeperVB[vert].x;
+				oldy = (int)sweeperVB[vert].y;
 			}
 
 			//LineTo(surface, (int)sweeperVB[0].x, (int)sweeperVB[0].y);
+			drawline(data, oldx, oldy, (int)sweeperVB[0].x, (int)sweeperVB[0].y, m_BluePen);
 
 			//draw the sweeper right track
 			//MoveToEx(surface, (int)sweeperVB[4].x, (int)sweeperVB[4].y, NULL);
+			oldx = (int)sweeperVB[4].x;
+			oldy = (int)sweeperVB[4].y;
 
 			for (vert=5; vert<8; ++vert)
 			{
 				//LineTo(surface, (int)sweeperVB[vert].x, (int)sweeperVB[vert].y);
+				drawline(data, oldx, oldy, (int)sweeperVB[vert].x, (int)sweeperVB[vert].y, m_BluePen);
+				oldx = (int)sweeperVB[vert].x;
+				oldy = (int)sweeperVB[vert].y;
 			}
 
 			//LineTo(surface, (int)sweeperVB[4].x, (int)sweeperVB[4].y);
+			drawline(data, oldx, oldy, (int)sweeperVB[4].x, (int)sweeperVB[4].y, m_BluePen);
 
 			//MoveToEx(surface, (int)sweeperVB[8].x, (int)sweeperVB[8].y, NULL);
+			oldx = (int)sweeperVB[8].x;
+			oldy = (int)sweeperVB[8].y;
 			//LineTo(surface, (int)sweeperVB[9].x, (int)sweeperVB[9].y);
+			drawline(data, oldx, oldy, (int)sweeperVB[9].x, (int)sweeperVB[9].y, m_BluePen);
 
 			//MoveToEx(surface, (int)sweeperVB[10].x, (int)sweeperVB[10].y, NULL);
-			drawcircle(data, m_vecSweepers[i].Position().x, m_vecSweepers[i].Position().y, 5, m_BluePen);
+			oldx = (int)sweeperVB[10].x;
+			oldy = (int)sweeperVB[10].y;
 			for (vert=11; vert<16; ++vert)
 			{
 				//LineTo(surface, (int)sweeperVB[vert].x, (int)sweeperVB[vert].y);
+				drawline(data, oldx, oldy, (int)sweeperVB[vert].x, (int)sweeperVB[vert].y, m_BluePen);
+				oldx = (int)sweeperVB[vert].x;
+				oldy = (int)sweeperVB[vert].y;
 			}
 		}
 		//put the old pen back

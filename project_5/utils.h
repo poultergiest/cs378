@@ -14,6 +14,8 @@ const int HEIGHT = 512;
 
 using namespace std;
 
+typedef int OutCode;
+
 //----------------------------------------------------------------------------
 //	some random number functions.
 //----------------------------------------------------------------------------
@@ -57,6 +59,13 @@ void init_data(struct rgbData data[][WIDTH]);
 void render(SDL_Surface * sf);
 void colorBG(struct rgbData data[][WIDTH], struct rgbData color);
 void drawcircle(struct rgbData data[][WIDTH], int x0, int y0, int radius, rgbData color);
+void setPixelUnsafe(struct rgbData data[][WIDTH], int x, int y, struct rgbData color);
+void drawchar(struct rgbData data[][WIDTH], int x0, int y0, char d, struct rgbData color);
+void drawstring(struct rgbData data[][WIDTH], int x0, int y0, const char* d, struct rgbData color);
+void drawlineUnsafe(rgbData data[][WIDTH], int x1, int y1, int x2, int y2, struct rgbData color);
+OutCode ComputeOutCode(int x, int y);
+void drawline(rgbData data[][WIDTH], int x0, int y0, int x1, int y1, struct rgbData color);
+
 
 /////////////////////////////////////////////////////////////////////
 //
@@ -72,9 +81,9 @@ struct SPoint
 };
 
 struct rgbData {
-	uint8_t red;
-	uint8_t green;
-	uint8_t blue;
+  uint8_t red;
+  uint8_t green;
+  uint8_t blue;
 };
 
 #endif
