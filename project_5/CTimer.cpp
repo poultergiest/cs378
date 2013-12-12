@@ -16,7 +16,7 @@ CTimer::CTimer() : m_FPS(0), m_TimeElapsed(0.0f), m_FrameTime(0),
 	//QueryPerformanceFrequency( (LARGE_INTEGER*) &m_PerfCountFreq);
 	timespec res;
 	clock_getres(CLOCK_REALTIME, &res);
-	m_PerfCountFreq = res.tv_nsec;
+	m_PerfCountFreq = res.tv_nsec*1000000;
 	m_TimeScale = 1.0f/(m_PerfCountFreq);
 }
 
@@ -34,7 +34,7 @@ CTimer::CTimer(float fps): m_FPS(fps), m_TimeElapsed(0.0f), m_LastTime(0),
 	//QueryPerformanceFrequency( (LARGE_INTEGER*) &m_PerfCountFreq);
 	timespec res;
 	clock_getres(CLOCK_REALTIME, &res);
-	m_PerfCountFreq = res.tv_nsec;
+	m_PerfCountFreq = res.tv_nsec*1000000;
 	m_TimeScale = 1.0f/m_PerfCountFreq;
 
 	//calculate ticks per frame
