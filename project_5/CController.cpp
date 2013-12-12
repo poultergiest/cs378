@@ -105,9 +105,9 @@ CController::CController(SDL_Surface* surface): m_NumSweepers(CParams::iNumSweep
 CController::~CController()
 {
 	if(m_pGA)
-  {
-    delete		m_pGA;
-  }
+	{
+		delete m_pGA;
+	}
 
 	/*DeleteObject(m_BluePen);
 	DeleteObject(m_RedPen);
@@ -126,10 +126,10 @@ void CController::WorldTransform(vector<SPoint> &VBuffer, SVector2D vPos)
 {
 	//create the world transformation matrix
 	C2DMatrix matTransform;
-	
+
 	//scale
 	matTransform.Scale(CParams::dMineScale, CParams::dMineScale);
-	
+
 	//translate
 	matTransform.Translate(vPos.x, vPos.y);
 
@@ -216,7 +216,7 @@ bool CController::Update()
 //------------------------------------Render()--------------------------------------
 //
 //----------------------------------------------------------------------------------
-void CController::Render(SDL_Surface* surface)
+void CController::Render(struct rgbData data[][WIDTH])
 {
 	//render the stats
 	string s = "Generation:          " + itos(m_iGenerations);
@@ -234,12 +234,13 @@ void CController::Render(SDL_Surface* surface)
 		{
 			//grab the vertices for the mine shape
 			vector<SPoint> mineVB = m_MineVB;
+			rgbData red = {255,0,0};
 
 			WorldTransform(mineVB, m_vecMines[i]);
 
 			//draw the mines
 			//MoveToEx(surface, (int)mineVB[0].x, (int)mineVB[0].y, NULL);
-
+			drawcircle(data, m_vecMines[i].x, m_vecMines[i].y, 5, red);
 			for (int vert=1; vert<mineVB.size(); ++vert)
 			{
 				//LineTo(surface, (int)mineVB[vert].x, (int)mineVB[vert].y);

@@ -55,6 +55,8 @@ void Clamp(double &arg, double min, double max);
 bool init_app(const char * name, SDL_Surface * icon, uint32_t flags);
 void init_data(struct rgbData data[][WIDTH]);
 void render(SDL_Surface * sf);
+void colorBG(struct rgbData data[][WIDTH], struct rgbData color);
+void drawcircle(struct rgbData data[][WIDTH], int x0, int y0, int radius, rgbData color);
 
 /////////////////////////////////////////////////////////////////////
 //
