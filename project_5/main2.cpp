@@ -115,7 +115,6 @@ int main(int argc, char **argv) {
 			colorBG(buffer, white);
 			g_pController->Render(buffer);
 			render(data_sf);
-			cout << CParams::iFramesPerSecond << endl;
 		}
 	}
 	SDL_FreeSurface( data_sf );
