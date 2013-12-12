@@ -47,13 +47,14 @@ static void EventFilter(const SDL_Event * event, SDL_Surface * data_sf)
 	if (event->type == SDL_KEYUP) {
 		switch( event->key.keysym.sym )
                 {
-                    case SDLK_ESCAPE: 
+                    case SDLK_ESCAPE:
+                    case SDLK_q:
                     	doExit = true;
                     	break;
-                    case SDLK_f: 
+                    case SDLK_f:
                     	g_pController->FastRenderToggle();
                     	break;
-                    case SDLK_r: 
+                    case SDLK_r:
                     	if (g_pController) {
                     		delete g_pController;
                     	}
