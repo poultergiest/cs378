@@ -63,10 +63,10 @@ private:
 
 
 	//pens we use for the stats
-	/*HPEN				m_RedPen;
-	HPEN				m_BluePen;
-	HPEN				m_GreenPen;
-	HPEN				m_OldPen;*/
+	rgbData		m_RedPen;
+	rgbData		m_BluePen;
+	rgbData		m_GreenPen;
+	rgbData		m_OldPen;
 	
 	//handle to the application window
 	SDL_Surface*			m_surface;

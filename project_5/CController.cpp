@@ -79,11 +79,13 @@ CController::CController(SDL_Surface* surface): m_NumSweepers(CParams::iNumSweep
 	}
 
 	//create a pen for the graph drawing
-	/*m_BluePen  = CreatePen(PS_SOLID, 1, RGB(0, 0, 255));
-	m_RedPen   = CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
-	m_GreenPen = CreatePen(PS_SOLID, 1, RGB(0, 150, 0));
-
-	m_OldPen	= NULL;*/
+	m_BluePen.red = 0;
+	m_BluePen.green = 0;
+	m_BluePen.blue = 255;
+	m_RedPen.red = 255;
+	m_GreenPen.red = 0;
+	m_GreenPen.green = 150;
+	m_GreenPen.blue = 0;
 
 	//fill the vertex buffers
 	for (i=0; i<NumSweeperVerts; ++i)
@@ -108,11 +110,6 @@ CController::~CController()
 	{
 		delete m_pGA;
 	}
-
-	/*DeleteObject(m_BluePen);
-	DeleteObject(m_RedPen);
-	DeleteObject(m_GreenPen);
-	DeleteObject(m_OldPen);*/
 }
 
 
@@ -151,6 +148,7 @@ bool CController::Update()
 	//information from its surroundings. The output from the NN is obtained
 	//and the sweeper is moved. If it encounters a mine its fitness is
 	//updated appropriately,
+	cout << "HERE" << endl;
 	if (m_iTicks++ < CParams::iNumTicks)
 	{
 		for (int i=0; i<m_NumSweepers; ++i)
@@ -223,8 +221,8 @@ void CController::Render(struct rgbData data[][WIDTH])
 	//TextOut(surface, 5, 0, s.c_str(), s.size());
 
 	//do not render if running at accelerated speed
-	if (!m_bFastRender)
-	{
+	// if (!m_bFastRender)
+	// {
 		//keep a record of the old pen
 		//m_OldPen = (HPEN)SelectObject(surface, m_GreenPen);
 
@@ -234,13 +232,12 @@ void CController::Render(struct rgbData data[][WIDTH])
 		{
 			//grab the vertices for the mine shape
 			vector<SPoint> mineVB = m_MineVB;
-			rgbData green = {0,150,0};
 
 			WorldTransform(mineVB, m_vecMines[i]);
 
 			//draw the mines
 			//MoveToEx(surface, (int)mineVB[0].x, (int)mineVB[0].y, NULL);
-			drawcircle(data, m_vecMines[i].x, m_vecMines[i].y, 5, red);
+			drawcircle(data, m_vecMines[i].x, m_vecMines[i].y, 5, m_GreenPen);
 			for (int vert=1; vert<mineVB.size(); ++vert)
 			{
 				//LineTo(surface, (int)mineVB[vert].x, (int)mineVB[vert].y);
@@ -299,11 +296,11 @@ void CController::Render(struct rgbData data[][WIDTH])
 		//put the old pen back
 		//SelectObject(surface, m_OldPen);
 
-	}//end if
-	else
-	{
-		//PlotStats(surface);
-	}
+	//}//end if
+	// else
+	// {
+	// 	//PlotStats(surface);
+	// }
 
 }
 
