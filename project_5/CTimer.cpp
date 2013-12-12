@@ -14,9 +14,8 @@ CTimer::CTimer() : m_FPS(0), m_TimeElapsed(0.0f), m_FrameTime(0),
 {
 	//how many ticks per sec do we get
 	//QueryPerformanceFrequency( (LARGE_INTEGER*) &m_PerfCountFreq);
-	timespec res;
-	clock_getres(CLOCK_REALTIME, &res);
-	m_PerfCountFreq = res.tv_nsec*1000000;
+	
+	m_PerfCountFreq = 1000000;
 	m_TimeScale = 1.0f/(m_PerfCountFreq);
 }
 
@@ -32,9 +31,8 @@ CTimer::CTimer(float fps): m_FPS(fps), m_TimeElapsed(0.0f), m_LastTime(0),
 
 	//how many ticks per sec do we get
 	//QueryPerformanceFrequency( (LARGE_INTEGER*) &m_PerfCountFreq);
-	timespec res;
-	clock_getres(CLOCK_REALTIME, &res);
-	m_PerfCountFreq = res.tv_nsec*1000000;
+
+	m_PerfCountFreq = 1000000;
 	m_TimeScale = 1.0f/m_PerfCountFreq;
 
 	//calculate ticks per frame
@@ -52,7 +50,7 @@ void CTimer::Start()
 	//get the time
 	//QueryPerformanceCounter( (LARGE_INTEGER*) &m_LastTime);
 	timespec start;
-	clock_gettime(CLOCK_REALTIME, &start);
+	clock_gettime(CLOCK_MONOTONIC  , &start);
 	m_LastTime = start.tv_sec*1000000 + start.tv_nsec;
 	//update time to render next frame
 	m_NextTime = m_LastTime + m_FrameTime;
@@ -77,9 +75,10 @@ bool CTimer::ReadyForNextFrame()
   
   //QueryPerformanceCounter( (LARGE_INTEGER*) &m_CurrentTime);
   timespec ready;
-  clock_gettime(CLOCK_REALTIME, &ready);
+  clock_gettime(CLOCK_MONOTONIC  , &ready);
   m_CurrentTime = ready.tv_sec*1000000 + ready.tv_nsec;
-
+/*  	cout << "m_CurrentTime " << m_CurrentTime << endl;
+*/
 	if (m_CurrentTime > m_NextTime)
 	{	
 
@@ -101,11 +100,11 @@ bool CTimer::ReadyForNextFrame()
 //	when calculations are to be based on dt.
 //
 //-------------------------------------------------------------------------
-double CTimer::TimeElapsed()
+/*double CTimer::TimeElapsed()
 {
 	//QueryPerformanceCounter( (LARGE_INTEGER*) &m_CurrentTime);
 	timespec elapsed;
-  	clock_gettime(CLOCK_REALTIME, &elapsed);
+  	clock_gettime(CLOCK_MONOTONIC  , &elapsed);
   	m_CurrentTime = elapsed.tv_sec*1000000 + elapsed.tv_nsec;
 
 
@@ -115,4 +114,11 @@ double CTimer::TimeElapsed()
 
 	return m_TimeElapsed;
 		
-}
+}*/
+
+/*int main () {
+	CTimer x(1);
+
+
+	return 0;
+}*/
