@@ -110,6 +110,9 @@ int main(int argc, char **argv) {
 			}
 
 			//render
+			rgbData white = {255,255,255};
+			colorBG(buffer, white);
+			g_pController->Render(buffer);
 			render(data_sf);
 		}
 	}

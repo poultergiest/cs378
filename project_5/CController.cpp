@@ -234,7 +234,7 @@ void CController::Render(struct rgbData data[][WIDTH])
 		{
 			//grab the vertices for the mine shape
 			vector<SPoint> mineVB = m_MineVB;
-			rgbData red = {255,0,0};
+			rgbData green = {0,150,0};
 
 			WorldTransform(mineVB, m_vecMines[i]);
 
