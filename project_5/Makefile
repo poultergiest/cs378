@@ -3,12 +3,12 @@
 CC = g++
 CFLAGS = -O3
 TARGET = final.out
-SOURCE = main2.cpp utils.cpp 
-CSOURCE = CMineSweeper.cpp
+SOURCE = main2.cpp utils.cpp CController.cpp C2DMatrix.cpp CMineSweeper.cpp CGenAlg.cpp CNeuralNet.cpp
+CSOURCE = CController.cpp
 PSOURCE = CParams.cpp
 TSOURCE = CTimer.cpp
 NETSOURCE = CNeuralNet.cpp
-OSOURCE = CMineSweeper.cpp SVector2D.h CController.cpp CGenAlg.cpp C2DMatrix.cpp
+OSOURCE = SVector2D.h
 
 ###########################################################
 
