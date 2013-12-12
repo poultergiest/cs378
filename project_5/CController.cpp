@@ -95,7 +95,7 @@ CController::CController(/*HWND hwndMain*/): m_NumSweepers(CParams::iNumSweepers
 	{
 		m_MineVB.push_back(mine[i]);
 	}
-
+	m_bFastRender = false;
 }
 
 

@@ -103,8 +103,8 @@ public:
 
 
 	//accessor methods
-	bool		FastRender()const	  {return m_bFastRender;}
-	void		FastRender(bool arg){m_bFastRender = arg;}
+	bool		FastRender() const {return m_bFastRender;}
+	void		FastRender (bool arg) {m_bFastRender = arg;}
 	void		FastRenderToggle()  {m_bFastRender = !m_bFastRender;}
 
 };

@@ -33,6 +33,7 @@ void Cleanup()
 }
 
 bool doExit = false;
+SDL_Event event;
 
 static int filter(const SDL_Event * event)
 { 
@@ -54,10 +55,35 @@ int main(int argc, char **argv) {
 
 	init_data(buffer);
 
-	while (!doExit) {
-		//render
-		render(data_sf);
-		SDL_Delay(1000/30);
+	//create a timer
+	CTimer timer(CParams::iFramesPerSecond);
+
+	//start the timer
+	timer.Start();
+
+	// Enter the message loop
+	bool bDone = false;
+
+	while (!bDone) {
+		while( SDL_PollEvent( &event ) )
+        	{
+        		filter(&event);
+	        	if(doExit) bDone = true;
+        	}
+
+		if (timer.ReadyForNextFrame() /*|| g_pController->FastRender()*/)
+		{	
+			if(!g_pController->Update())
+			{
+				//we have a problem, end app
+				bDone = true;
+			}
+
+			//render
+			render(data_sf);
+		}
+		
+		//SDL_Delay(1000/30);
 	}
 
 	Cleanup();

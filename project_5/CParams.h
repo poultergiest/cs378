@@ -13,6 +13,8 @@
 //
 //------------------------------------------------------------------------
 #include <fstream>
+#include <cassert>
+#include <string>
 
 using namespace std;	
 
@@ -81,10 +83,12 @@ public:
   //ctor
   CParams()
   {
-    /*if(!LoadInParameters("params.ini"))
+    string file = "params.ini";
+    if(!LoadInParameters("params.ini"))
     {
-      MessageBox(NULL, "Cannot find ini file!", "Error", 0);
-    }*/
+      //MessageBox(NULL, "Cannot find ini file!", "Error", 0);
+      assert(false);
+    }
 
   }
 
