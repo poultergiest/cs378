@@ -35,6 +35,7 @@ CGenAlg::CGenAlg(int	  popsize,
 		}
 
 	}
+	clock_gettime(CLOCK_REALTIME, &start);
 }
 
 
@@ -220,9 +221,24 @@ void CGenAlg::GrabNBest(int	            NBest,
 //	calculates the fittest and weakest genome and the average/total 
 //	fitness scores
 //---------------------------------------------------------------------
+
+timespec diff(timespec start, timespec end)
+{
+	timespec temp;
+	if ((end.tv_nsec-start.tv_nsec)<0) {
+		temp.tv_sec = end.tv_sec-start.tv_sec-1;
+		temp.tv_nsec = 1000000000+end.tv_nsec-start.tv_nsec;
+	} else {
+		temp.tv_sec = end.tv_sec-start.tv_sec;
+		temp.tv_nsec = end.tv_nsec-start.tv_nsec;
+	}
+	return temp;
+}
+
 void CGenAlg::CalculateBestWorstAvTot()
 {
 	m_dTotalFitness = 0;
+	timespec current;
 	
 	double HighestSoFar = 0;
 	double LowestSoFar  = 9999999;
@@ -254,11 +270,14 @@ void CGenAlg::CalculateBestWorstAvTot()
 	
 	m_dAverageFitness = m_dTotalFitness / m_iPopSize;
 	if (m_dAverageFitness > m_cFitnessReached) {
+		clock_gettime(CLOCK_REALTIME, &current);
 		cout << "Average = " << m_dAverageFitness << endl;
-		cout << "Time elapsed " << endl;
+		cout << "Time elapsed " << diff(start, current).tv_nsec << endl;
 		m_cFitnessReached += 5;
 	}
 }
+
+
 
 //-------------------------Reset()------------------------------
 //

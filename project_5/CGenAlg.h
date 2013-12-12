@@ -92,7 +92,7 @@ private:
 	int m_cFitnessReached;
 
 	//performance timer
-	timespec current;
+	timespec start;
 
 
 	void    Crossover(const vector<double> &mum,
