@@ -97,7 +97,7 @@ CController::CController(SDL_Surface* surface): m_NumSweepers(CParams::iNumSweep
 	{
 		m_MineVB.push_back(mine[i]);
 	}
-	m_bFastRender = false;
+	//m_bFastRender = false;
 }
 
 
@@ -224,7 +224,7 @@ void CController::Render(struct rgbData data[][WIDTH])
 	// if (!m_bFastRender)
 	// {
 		//keep a record of the old pen
-		//m_OldPen = (HPEN)SelectObject(surface, m_GreenPen);
+		m_OldPen = m_GreenPen;
 
 		//render the mines
 		int i = 0;
@@ -237,11 +237,11 @@ void CController::Render(struct rgbData data[][WIDTH])
 
 			//draw the mines
 			//MoveToEx(surface, (int)mineVB[0].x, (int)mineVB[0].y, NULL);
-			drawcircle(data, m_vecMines[i].x, m_vecMines[i].y, 5, m_GreenPen);
-			for (int vert=1; vert<mineVB.size(); ++vert)
-			{
-				//LineTo(surface, (int)mineVB[vert].x, (int)mineVB[vert].y);
-			}
+			drawcircle(data, m_vecMines[i].x, m_vecMines[i].y, 2, m_GreenPen);
+			// for (int vert=1; vert<mineVB.size(); ++vert)
+			// {
+			// 	LineTo(surface, (int)mineVB[vert].x, (int)mineVB[vert].y);
+			// }
 
 			//LineTo(surface, (int)mineVB[0].x, (int)mineVB[0].y);
 		}
@@ -287,7 +287,7 @@ void CController::Render(struct rgbData data[][WIDTH])
 			//LineTo(surface, (int)sweeperVB[9].x, (int)sweeperVB[9].y);
 
 			//MoveToEx(surface, (int)sweeperVB[10].x, (int)sweeperVB[10].y, NULL);
-
+			drawcircle(data, m_vecSweepers[i].Position().x, m_vecSweepers[i].Position().y, 5, m_BluePen);
 			for (vert=11; vert<16; ++vert)
 			{
 				//LineTo(surface, (int)sweeperVB[vert].x, (int)sweeperVB[vert].y);
