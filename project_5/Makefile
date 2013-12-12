@@ -3,7 +3,7 @@
 CC = g++
 CFLAGS = -O3
 TARGET = final.out
-SOURCE = main2.cpp utils.cpp CParams.cpp CController.cpp C2DMatrix.cpp CMineSweeper.cpp CGenAlg.cpp CNeuralNet.cpp
+SOURCE = main2.cpp utils.cpp CTimer.cpp CParams.cpp CController.cpp C2DMatrix.cpp CMineSweeper.cpp CGenAlg.cpp CNeuralNet.cpp
 CSOURCE = CController.cpp
 PSOURCE = CParams.cpp
 TSOURCE = CTimer.cpp
@@ -14,7 +14,7 @@ OSOURCE = SVector2D.h
 
 sweepers: ${SOURCE}
 	clear
-	${CC} ${CFLAGS} -o ${TARGET} CTimer.o ${SOURCE} -lrt -lSDL -msse4
+	${CC} ${CFLAGS} -o ${TARGET} ${SOURCE} -lrt -lSDL -msse4
 
 controller: ${CSOURCE}
 	clear
