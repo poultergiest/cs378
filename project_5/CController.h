@@ -93,7 +93,7 @@ public:
 
 	~CController();
 
-	void		Render(/*HDC surface*/);
+	void		Render(SDL_Surface* surface);
 
 	void		WorldTransform(vector<SPoint> &VBuffer,SVector2D      vPos);
 	

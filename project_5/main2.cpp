@@ -69,7 +69,7 @@ void init(SDL_Surface * data_sf) {
 int main(int argc, char **argv) {
 	struct rgbData buffer[HEIGHT][WIDTH];
 	bool ok =
-		init_app("Sweeper", NULL, SDL_INIT_VIDEO) &&
+		init_app("Mine Sweepers", NULL, SDL_INIT_VIDEO) &&
 		SDL_SetVideoMode(WIDTH, HEIGHT, 24, SDL_HWSURFACE);
 	assert(ok);
 

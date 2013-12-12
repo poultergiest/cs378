@@ -218,11 +218,11 @@ bool CController::Update()
 //------------------------------------Render()--------------------------------------
 //
 //----------------------------------------------------------------------------------
-void CController::Render(/*HDC surface*/)
+void CController::Render(SDL_Surface* surface)
 {
 	//render the stats
-	/*string s = "Generation:          " + itos(m_iGenerations);
-	TextOut(surface, 5, 0, s.c_str(), s.size());
+	string s = "Generation:          " + itos(m_iGenerations);
+	/*TextOut(surface, 5, 0, s.c_str(), s.size());
 
 	//do not render if running at accelerated speed
 	if (!m_bFastRender)
