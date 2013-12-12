@@ -86,7 +86,7 @@ CController::CController(SDL_Surface* surface): m_NumSweepers(CParams::iNumSweep
 	m_RedPen.green = 0;
 	m_RedPen.blue = 0;
 	m_GreenPen.red = 0;
-	m_GreenPen.green = 150;
+	m_GreenPen.green = 175;
 	m_GreenPen.blue = 0;
 
 	//fill the vertex buffers
@@ -150,7 +150,6 @@ bool CController::Update()
 	//information from its surroundings. The output from the NN is obtained
 	//and the sweeper is moved. If it encounters a mine its fitness is
 	//updated appropriately,
-	cout << "HERE" << endl;
 	if (m_iTicks++ < CParams::iNumTicks)
 	{
 		for (int i=0; i<m_NumSweepers; ++i)
@@ -188,6 +187,7 @@ bool CController::Update()
 	//Time to run the GA and update the sweepers with their new NNs
 	else
 	{
+		cout << "HERE!!!!!!!!!!!!!!!!!!!!!!!" << endl;
 		//update the stats to be used in our stat window
 		m_vecAvFitness.push_back(m_pGA->AverageFitness());
 		m_vecBestFitness.push_back(m_pGA->BestFitness());
@@ -223,8 +223,8 @@ void CController::Render(struct rgbData data[][WIDTH])
 	//TextOut(surface, 5, 0, s.c_str(), s.size());
 
 	//do not render if running at accelerated speed
-	// if (!m_bFastRender)
-	// {
+	if (!m_bFastRender)
+	{
 		//keep a record of the old pen
 		m_OldPen = m_GreenPen;
 
@@ -319,11 +319,11 @@ void CController::Render(struct rgbData data[][WIDTH])
 		//put the old pen back
 		//SelectObject(surface, m_OldPen);
 
-	//}//end if
-	// else
-	// {
-	// 	//PlotStats(surface);
-	// }
+	}//end if
+	else
+	{
+		PlotStats(data);
+	}
 
 }
 
@@ -335,10 +335,14 @@ void CController::Render(struct rgbData data[][WIDTH])
 void CController::PlotStats(struct rgbData data[][WIDTH])
 {
 	string s = "Best Fitness:       " + ftos(m_pGA->BestFitness());
+	
 	//TextOut(surface, 5, 20, s.c_str(), s.size());
+	rgbData black = {0, 0, 0};
+	drawstring(data, 5, 20, s.c_str(), black);
 
 	s = "Average Fitness: " + ftos(m_pGA->AverageFitness());
 	//TextOut(surface, 5, 40, s.c_str(), s.size());
+	drawstring(data, 5, 40, s.c_str(), black);
 
 	//render the graph
 	float HSlice = (float)cxClient/(m_iGenerations+1);
