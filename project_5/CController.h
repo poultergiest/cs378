@@ -89,7 +89,7 @@ private:
 
 public:
 
-	CController(SDL_Surface* surface);
+	CController();
 
 	~CController();
 

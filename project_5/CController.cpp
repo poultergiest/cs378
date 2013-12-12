@@ -38,12 +38,11 @@ const SPoint mine[NumMineVerts] = {SPoint(-1, -1),
 //	initilaize the sweepers, their brains and the GA factory
 //
 //-----------------------------------------------------------------------
-CController::CController(SDL_Surface* surface): m_NumSweepers(CParams::iNumSweepers), 
+CController::CController(): m_NumSweepers(CParams::iNumSweepers), 
 					m_pGA(NULL),
 					m_bFastRender(false),
 					m_iTicks(0),
 					m_NumMines(CParams::iNumMines),
-					m_surface(surface),
 					m_iGenerations(0),
 					cxClient(CParams::WindowWidth),
 					cyClient(CParams::WindowHeight)

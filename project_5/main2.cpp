@@ -40,7 +40,7 @@ SDL_Event event;
 //
 //	The SDL event handler for keystrokes and mouse clicks
 //-----------------------------------------------------------------------
-static void EventFilter(const SDL_Event * event, SDL_Surface * data_sf)
+static int EventFilter(const SDL_Event * event)
 { 
 	if (event->type == SDL_QUIT)
 		doExit = true;
@@ -58,10 +58,11 @@ static void EventFilter(const SDL_Event * event, SDL_Surface * data_sf)
                     	if (g_pController) {
                     		delete g_pController;
                     	}
-		        g_pController = new CController(data_sf);
+		        g_pController = new CController();
                     	break;
                 }
 	}
+	return event->type == SDL_QUIT;
 }
 
 
@@ -71,7 +72,7 @@ void init(SDL_Surface * data_sf) {
 	srand(time(NULL));
 
 	//setup the controller
-	g_pController = new CController(data_sf);
+	g_pController = new CController(/*data_sf*/);
 }
 
 int main(int argc, char **argv) {
@@ -82,6 +83,7 @@ int main(int argc, char **argv) {
 	assert(ok);
 
 	SDL_Surface * data_sf = SDL_CreateRGBSurfaceFrom((char*)buffer, WIDTH, HEIGHT, 24, WIDTH * 3, 0x000000FF, 0x0000FF00, 0x00FF0000, 0);
+	//SDL_SetEventFilter(EventFilter);
 
 	init_data(buffer);
 	init(data_sf); // for the controller and other buffers
@@ -112,7 +114,7 @@ int main(int argc, char **argv) {
 			}
 
 			//render
-			//colorBG(buffer, white);
+			// colorBG(buffer, white);
 			// g_pController->Render(buffer);
 			// render(data_sf);
 		}
