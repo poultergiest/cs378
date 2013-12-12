@@ -13,15 +13,16 @@ CGenAlg::CGenAlg(int	  popsize,
                  double	CrossRat,
                  int	  numweights) :	m_iPopSize(popsize),
                                       m_dMutationRate(MutRat),
-										                  m_dCrossoverRate(CrossRat),
-										                  m_iChromoLength(numweights),
-										                  m_dTotalFitness(0),
-										                  m_cGeneration(0),
-										                  m_iFittestGenome(0),
-										                  m_dBestFitness(0),
-										                  m_dWorstFitness(99999999),
-										                  m_dAverageFitness(0)
-{
+									m_dCrossoverRate(CrossRat),
+									m_iChromoLength(numweights),
+									m_dTotalFitness(0),
+									m_cGeneration(0),
+									m_iFittestGenome(0),
+									m_dBestFitness(0),
+									m_dWorstFitness(99999999),
+									m_dAverageFitness(0),
+									m_cFitnessReached(5)
+									{
 	//initialise population with chromosomes consisting of random
 	//weights and all fitnesses set to zero
 	for (int i=0; i<m_iPopSize; ++i)
@@ -32,6 +33,7 @@ CGenAlg::CGenAlg(int	  popsize,
 		{
 			m_vecPop[i].vecWeights.push_back(RandomClamped());
 		}
+
 	}
 }
 
@@ -251,6 +253,11 @@ void CGenAlg::CalculateBestWorstAvTot()
 	}//next chromo
 	
 	m_dAverageFitness = m_dTotalFitness / m_iPopSize;
+	if (m_dAverageFitness > m_cFitnessReached) {
+		cout << "Average = " << m_dAverageFitness << endl;
+		cout << "Time elapsed " << endl;
+		m_cFitnessReached += 5;
+	}
 }
 
 //-------------------------Reset()------------------------------

@@ -47,7 +47,8 @@ public:
 	//only use this after a call to the above.
 	double	GetTimeElapsed(){return m_TimeElapsed;}
 
-	/*double	TimeElapsed();*/
+	double	TimeElapsed();
+
 
 };
 

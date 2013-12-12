@@ -1,4 +1,5 @@
 #include "CTimer.h"
+#include <stdio.h>
 using namespace std;
 //---------------------- default constructor ------------------------------
 //
@@ -50,7 +51,7 @@ void CTimer::Start()
 	//get the time
 	//QueryPerformanceCounter( (LARGE_INTEGER*) &m_LastTime);
 	timespec start;
-	clock_gettime(CLOCK_MONOTONIC  , &start);
+	clock_gettime(CLOCK_REALTIME  , &start);
 	m_LastTime = start.tv_sec*1000000 + start.tv_nsec;
 	//update time to render next frame
 	m_NextTime = m_LastTime + m_FrameTime;
@@ -75,7 +76,7 @@ bool CTimer::ReadyForNextFrame()
   
   //QueryPerformanceCounter( (LARGE_INTEGER*) &m_CurrentTime);
   timespec ready;
-  clock_gettime(CLOCK_MONOTONIC  , &ready);
+  clock_gettime(CLOCK_REALTIME  , &ready);
   m_CurrentTime = ready.tv_sec*1000000 + ready.tv_nsec;
 /*  	cout << "m_CurrentTime " << m_CurrentTime << endl;
 */
@@ -100,11 +101,11 @@ bool CTimer::ReadyForNextFrame()
 //	when calculations are to be based on dt.
 //
 //-------------------------------------------------------------------------
-/*double CTimer::TimeElapsed()
+double CTimer::TimeElapsed()
 {
 	//QueryPerformanceCounter( (LARGE_INTEGER*) &m_CurrentTime);
 	timespec elapsed;
-  	clock_gettime(CLOCK_MONOTONIC  , &elapsed);
+  	clock_gettime(CLOCK_REALTIME  , &elapsed);
   	m_CurrentTime = elapsed.tv_sec*1000000 + elapsed.tv_nsec;
 
 
@@ -114,11 +115,4 @@ bool CTimer::ReadyForNextFrame()
 
 	return m_TimeElapsed;
 		
-}*/
-
-/*int main () {
-	CTimer x(1);
-
-
-	return 0;
-}*/
+}

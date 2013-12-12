@@ -16,9 +16,11 @@
 #include <algorithm>
 #include <iostream>
 #include <fstream>
+#include <time.h>
 
 #include "utils.h"
 #include "CParams.h"
+
 
 using namespace std;
 
@@ -85,6 +87,12 @@ private:
 
 	//generation counter
 	int	  m_cGeneration;
+
+	//fitness baseline
+	int m_cFitnessReached;
+
+	//performance timer
+	timespec current;
 
 
 	void    Crossover(const vector<double> &mum,

@@ -12,6 +12,7 @@
 const int WIDTH = 512;
 const int HEIGHT = 512;
 
+
 using namespace std;
 
 typedef int OutCode;
