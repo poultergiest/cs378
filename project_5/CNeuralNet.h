@@ -11,7 +11,7 @@
 #include <vector>
 #include <fstream>
 #include <math.h>
-
+#include <smmintrin.h>
 #include "utils.h"
 #include "CParams.h"
 
