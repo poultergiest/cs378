@@ -30,7 +30,7 @@ ctimer: ${TSOURCE}
 
 cnet: ${NETSOURCE}
 	clear
-	${CC} ${CFLAGS} -c ${NETSOURCE}
+	${CC} ${CFLAGS} -c ${NETSOURCE} -msse4
 
 clean:
 	rm -f *.out {TARGET}
