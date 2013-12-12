@@ -187,7 +187,6 @@ bool CController::Update()
 	//Time to run the GA and update the sweepers with their new NNs
 	else
 	{
-		cout << "HERE!!!!!!!!!!!!!!!!!!!!!!!" << endl;
 		//update the stats to be used in our stat window
 		m_vecAvFitness.push_back(m_pGA->AverageFitness());
 		m_vecBestFitness.push_back(m_pGA->BestFitness());
@@ -338,11 +337,12 @@ void CController::PlotStats(struct rgbData data[][WIDTH])
 	
 	//TextOut(surface, 5, 20, s.c_str(), s.size());
 	rgbData black = {0, 0, 0};
-	drawstring(data, 5, 20, s.c_str(), black);
+	rgbData white = {255, 255, 255};
+	drawstring(data, 5, 20, s.c_str(), white);
 
 	s = "Average Fitness: " + ftos(m_pGA->AverageFitness());
 	//TextOut(surface, 5, 40, s.c_str(), s.size());
-	drawstring(data, 5, 40, s.c_str(), black);
+	drawstring(data, 5, 40, s.c_str(), white);
 
 	//render the graph
 	float HSlice = (float)cxClient/(m_iGenerations+1);

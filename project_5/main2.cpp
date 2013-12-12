@@ -112,9 +112,9 @@ int main(int argc, char **argv) {
 			}
 
 			//render
-			colorBG(buffer, white);
-			g_pController->Render(buffer);
-			render(data_sf);
+			//colorBG(buffer, white);
+			// g_pController->Render(buffer);
+			// render(data_sf);
 		}
 	}
 	SDL_FreeSurface( data_sf );
