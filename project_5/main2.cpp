@@ -94,6 +94,7 @@ int main(int argc, char **argv) {
 
 	// Enter the message loop
 	bool bDone = false;
+	rgbData white = {255,255,255};
 
 	while (!bDone) {
 		while( SDL_PollEvent( &event ) )
@@ -111,7 +112,6 @@ int main(int argc, char **argv) {
 			}
 
 			//render
-			rgbData white = {255,255,255};
 			colorBG(buffer, white);
 			g_pController->Render(buffer);
 			render(data_sf);

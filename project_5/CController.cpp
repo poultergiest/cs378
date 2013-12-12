@@ -83,8 +83,10 @@ CController::CController(SDL_Surface* surface): m_NumSweepers(CParams::iNumSweep
 	m_BluePen.green = 0;
 	m_BluePen.blue = 255;
 	m_RedPen.red = 255;
+	m_RedPen.green = 0;
+	m_RedPen.blue = 0;
 	m_GreenPen.red = 0;
-	m_GreenPen.green = 150;
+	m_GreenPen.green = 175;
 	m_GreenPen.blue = 0;
 
 	//fill the vertex buffers
@@ -97,7 +99,7 @@ CController::CController(SDL_Surface* surface): m_NumSweepers(CParams::iNumSweep
 	{
 		m_MineVB.push_back(mine[i]);
 	}
-	//m_bFastRender = false;
+	m_bFastRender = true;
 }
 
 
@@ -185,6 +187,7 @@ bool CController::Update()
 	//Time to run the GA and update the sweepers with their new NNs
 	else
 	{
+		cout << "HERE!!!!!!!!!!!!!!!!!!!!!!!" << endl;
 		//update the stats to be used in our stat window
 		m_vecAvFitness.push_back(m_pGA->AverageFitness());
 		m_vecBestFitness.push_back(m_pGA->BestFitness());
@@ -220,8 +223,8 @@ void CController::Render(struct rgbData data[][WIDTH])
 	//TextOut(surface, 5, 0, s.c_str(), s.size());
 
 	//do not render if running at accelerated speed
-	// if (!m_bFastRender)
-	// {
+	if (!m_bFastRender)
+	{
 		//keep a record of the old pen
 		m_OldPen = m_GreenPen;
 
@@ -247,6 +250,7 @@ void CController::Render(struct rgbData data[][WIDTH])
        		
 		//we want the fittest displayed in red
 		//SelectObject(surface, m_RedPen);
+		m_OldPen = m_RedPen;
 
 		//render the sweepers
 		for (i=0; i<m_NumSweepers; i++)
@@ -254,6 +258,7 @@ void CController::Render(struct rgbData data[][WIDTH])
 			if (i == CParams::iNumElite)
 			{
 				//SelectObject(surface, m_OldPen);
+				m_OldPen = m_BluePen;
 			}
       
 			//grab the sweeper vertices
@@ -270,13 +275,13 @@ void CController::Render(struct rgbData data[][WIDTH])
 			for (vert=1; vert<4; ++vert)
 			{
 				//LineTo(surface, (int)sweeperVB[vert].x, (int)sweeperVB[vert].y);
-				drawline(data, oldx, oldy, (int)sweeperVB[vert].x, (int)sweeperVB[vert].y, m_BluePen);
+				drawline(data, oldx, oldy, (int)sweeperVB[vert].x, (int)sweeperVB[vert].y, m_OldPen);
 				oldx = (int)sweeperVB[vert].x;
 				oldy = (int)sweeperVB[vert].y;
 			}
 
 			//LineTo(surface, (int)sweeperVB[0].x, (int)sweeperVB[0].y);
-			drawline(data, oldx, oldy, (int)sweeperVB[0].x, (int)sweeperVB[0].y, m_BluePen);
+			drawline(data, oldx, oldy, (int)sweeperVB[0].x, (int)sweeperVB[0].y, m_OldPen);
 
 			//draw the sweeper right track
 			//MoveToEx(surface, (int)sweeperVB[4].x, (int)sweeperVB[4].y, NULL);
@@ -286,19 +291,19 @@ void CController::Render(struct rgbData data[][WIDTH])
 			for (vert=5; vert<8; ++vert)
 			{
 				//LineTo(surface, (int)sweeperVB[vert].x, (int)sweeperVB[vert].y);
-				drawline(data, oldx, oldy, (int)sweeperVB[vert].x, (int)sweeperVB[vert].y, m_BluePen);
+				drawline(data, oldx, oldy, (int)sweeperVB[vert].x, (int)sweeperVB[vert].y, m_OldPen);
 				oldx = (int)sweeperVB[vert].x;
 				oldy = (int)sweeperVB[vert].y;
 			}
 
 			//LineTo(surface, (int)sweeperVB[4].x, (int)sweeperVB[4].y);
-			drawline(data, oldx, oldy, (int)sweeperVB[4].x, (int)sweeperVB[4].y, m_BluePen);
+			drawline(data, oldx, oldy, (int)sweeperVB[4].x, (int)sweeperVB[4].y, m_OldPen);
 
 			//MoveToEx(surface, (int)sweeperVB[8].x, (int)sweeperVB[8].y, NULL);
 			oldx = (int)sweeperVB[8].x;
 			oldy = (int)sweeperVB[8].y;
 			//LineTo(surface, (int)sweeperVB[9].x, (int)sweeperVB[9].y);
-			drawline(data, oldx, oldy, (int)sweeperVB[9].x, (int)sweeperVB[9].y, m_BluePen);
+			drawline(data, oldx, oldy, (int)sweeperVB[9].x, (int)sweeperVB[9].y, m_OldPen);
 
 			//MoveToEx(surface, (int)sweeperVB[10].x, (int)sweeperVB[10].y, NULL);
 			oldx = (int)sweeperVB[10].x;
@@ -306,7 +311,7 @@ void CController::Render(struct rgbData data[][WIDTH])
 			for (vert=11; vert<16; ++vert)
 			{
 				//LineTo(surface, (int)sweeperVB[vert].x, (int)sweeperVB[vert].y);
-				drawline(data, oldx, oldy, (int)sweeperVB[vert].x, (int)sweeperVB[vert].y, m_BluePen);
+				drawline(data, oldx, oldy, (int)sweeperVB[vert].x, (int)sweeperVB[vert].y, m_OldPen);
 				oldx = (int)sweeperVB[vert].x;
 				oldy = (int)sweeperVB[vert].y;
 			}
@@ -314,11 +319,11 @@ void CController::Render(struct rgbData data[][WIDTH])
 		//put the old pen back
 		//SelectObject(surface, m_OldPen);
 
-	//}//end if
-	// else
-	// {
-	// 	//PlotStats(surface);
-	// }
+	}//end if
+	else
+	{
+		PlotStats(data);
+	}
 
 }
 
@@ -327,48 +332,50 @@ void CController::Render(struct rgbData data[][WIDTH])
 //  Given a surface to draw on this function displays stats and a crude
 //  graph showing best and average fitness
 //------------------------------------------------------------------------
-/*void CController::PlotStats(HDC surface)
+void CController::PlotStats(struct rgbData data[][WIDTH])
 {
-    string s = "Best Fitness:       " + ftos(m_pGA->BestFitness());
-	  TextOut(surface, 5, 20, s.c_str(), s.size());
+	string s = "Best Fitness:       " + ftos(m_pGA->BestFitness());
+	
+	//TextOut(surface, 5, 20, s.c_str(), s.size());
+	rgbData black = {0, 0, 0};
+	drawstring(data, 5, 20, s.c_str(), black);
 
-     s = "Average Fitness: " + ftos(m_pGA->AverageFitness());
-	  TextOut(surface, 5, 40, s.c_str(), s.size());
-    
-    //render the graph
-    float HSlice = (float)cxClient/(m_iGenerations+1);
-    float VSlice = (float)cyClient/((m_pGA->BestFitness()+1)*2);
+	s = "Average Fitness: " + ftos(m_pGA->AverageFitness());
+	//TextOut(surface, 5, 40, s.c_str(), s.size());
+	drawstring(data, 5, 40, s.c_str(), black);
 
-    //plot the graph for the best fitness
-    float x = 0;
-    
-    m_OldPen = (HPEN)SelectObject(surface, m_RedPen);
+	//render the graph
+	float HSlice = (float)cxClient/(m_iGenerations+1);
+	float VSlice = (float)cyClient/((m_pGA->BestFitness()+1)*2);
 
-    //MoveToEx(surface, 0, cyClient, NULL);
-    
-    for (int i=0; i<m_vecBestFitness.size(); ++i)
-    {
-       //LineTo(surface, x, cyClient - VSlice*m_vecBestFitness[i]);
+	//plot the graph for the best fitness
+	float x = 0;
 
-       x += HSlice;
-    }
+	//m_OldPen = (HPEN)SelectObject(surface, m_RedPen);
 
-    //plot the graph for the average fitness
-    x = 0;
+	//MoveToEx(surface, 0, cyClient, NULL);
+	int i = 0;
+	for (i=0; i<m_vecBestFitness.size(); ++i)
+	{
+		//LineTo(surface, x, cyClient - VSlice*m_vecBestFitness[i]);
 
-    SelectObject(surface, m_BluePen);
+		x += HSlice;
+	}
 
-    //MoveToEx(surface, 0, cyClient, NULL);
-    
-    for (i=0; i<m_vecAvFitness.size(); ++i)
-    {
-       //LineTo(surface, (int)x, (int)(cyClient - VSlice*m_vecAvFitness[i]));
+	//plot the graph for the average fitness
+	x = 0;
 
-       x += HSlice;
-    }
+	//SelectObject(surface, m_BluePen);
 
-    //replace the old pen
-    SelectObject(surface, m_OldPen);
+	//MoveToEx(surface, 0, cyClient, NULL);
+
+	for (i=0; i<m_vecAvFitness.size(); ++i)
+	{
+		//LineTo(surface, (int)x, (int)(cyClient - VSlice*m_vecAvFitness[i]));
+
+		x += HSlice;
+	}
+
+	//replace the old pen
+	//SelectObject(surface, m_OldPen);
 }
-
-*/
