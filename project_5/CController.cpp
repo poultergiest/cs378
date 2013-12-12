@@ -97,7 +97,7 @@ CController::CController(SDL_Surface* surface): m_NumSweepers(CParams::iNumSweep
 	{
 		m_MineVB.push_back(mine[i]);
 	}
-	//m_bFastRender = false;
+	m_bFastRender = true;
 }
 
 
@@ -328,13 +328,13 @@ void CController::Render(struct rgbData data[][WIDTH])
 //  Given a surface to draw on this function displays stats and a crude
 //  graph showing best and average fitness
 //------------------------------------------------------------------------
-/*void CController::PlotStats(HDC surface)
+void CController::PlotStats(struct rgbData data[][WIDTH])
 {
     string s = "Best Fitness:       " + ftos(m_pGA->BestFitness());
-	  TextOut(surface, 5, 20, s.c_str(), s.size());
+	  //TextOut(surface, 5, 20, s.c_str(), s.size());
 
      s = "Average Fitness: " + ftos(m_pGA->AverageFitness());
-	  TextOut(surface, 5, 40, s.c_str(), s.size());
+	  //TextOut(surface, 5, 40, s.c_str(), s.size());
     
     //render the graph
     float HSlice = (float)cxClient/(m_iGenerations+1);
@@ -343,11 +343,11 @@ void CController::Render(struct rgbData data[][WIDTH])
     //plot the graph for the best fitness
     float x = 0;
     
-    m_OldPen = (HPEN)SelectObject(surface, m_RedPen);
+    //m_OldPen = (HPEN)SelectObject(surface, m_RedPen);
 
     //MoveToEx(surface, 0, cyClient, NULL);
-    
-    for (int i=0; i<m_vecBestFitness.size(); ++i)
+    int i = 0;
+    for (i=0; i<m_vecBestFitness.size(); ++i)
     {
        //LineTo(surface, x, cyClient - VSlice*m_vecBestFitness[i]);
 
@@ -357,7 +357,7 @@ void CController::Render(struct rgbData data[][WIDTH])
     //plot the graph for the average fitness
     x = 0;
 
-    SelectObject(surface, m_BluePen);
+    //SelectObject(surface, m_BluePen);
 
     //MoveToEx(surface, 0, cyClient, NULL);
     
@@ -369,7 +369,5 @@ void CController::Render(struct rgbData data[][WIDTH])
     }
 
     //replace the old pen
-    SelectObject(surface, m_OldPen);
+    //SelectObject(surface, m_OldPen);
 }
-
-*/

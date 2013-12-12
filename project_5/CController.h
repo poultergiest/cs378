@@ -85,7 +85,7 @@ private:
 
   //this function plots a graph of the average and best fitnesses
   //over the course of a run
-  //void   PlotStats(HDC surface);
+  void   PlotStats(struct rgbData data[][WIDTH]);
 
 public:
 
