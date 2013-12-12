@@ -66,6 +66,8 @@ void CTimer::Start()
 //----------------------------------------------------------------------------
 bool CTimer::ReadyForNextFrame()
 {
+
+	cout << "HERE" << endl;
 	if (!m_FPS)
   {
     //MessageBox(NULL, "No FPS set in timer", "Doh!", 0);
@@ -76,10 +78,12 @@ bool CTimer::ReadyForNextFrame()
   //QueryPerformanceCounter( (LARGE_INTEGER*) &m_CurrentTime);
   timespec temp;
   clock_gettime(CLOCK_REALTIME, &temp);
-  m_LastTime = temp.tv_sec*1000000 + temp.tv_nsec;
+  m_CurrentTime = temp.tv_sec*1000000 + temp.tv_nsec;
+  	cout << "m_CurrentTime = " << m_CurrentTime << endl;
+  	cout << "m_NextTime = " << m_NextTime << endl;
 
 	if (m_CurrentTime > m_NextTime)
-	{
+	{	
 
 		m_TimeElapsed	= (m_CurrentTime - m_LastTime) * m_TimeScale;
 		m_LastTime		= m_CurrentTime;
