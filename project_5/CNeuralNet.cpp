@@ -138,7 +138,7 @@ vector<double> CNeuralNet::GetWeights() const
 
 	return;
 }*/
-
+/* optimized version */
 void CNeuralNet::PutWeights(vector<double> &weights)
 {
 	int cWeight = 0;
@@ -146,7 +146,6 @@ void CNeuralNet::PutWeights(vector<double> &weights)
 	//for each layer
 	for (int i=0; i<m_NumHiddenLayers + 1; ++i)
 	{
-
 		//for each neuron
 		for (int j=0; j<m_vecLayers[i].m_NumNeurons; ++j)
 		{
@@ -200,7 +199,7 @@ void CNeuralNet::PutWeights(vector<double> &weights)
 
 	return weights;
 }*/
-
+/* optimized version */
 int CNeuralNet::GetNumberOfWeights() const
 {
 	int weights = 0;
@@ -287,7 +286,7 @@ int CNeuralNet::GetNumberOfWeights() const
 
 	return outputs;
 }*/
-
+/* optimized version */
 vector<double> CNeuralNet::Update(vector<double> &inputs)
 {
 	//stores the resultant outputs from each layer
@@ -323,7 +322,7 @@ vector<double> CNeuralNet::Update(vector<double> &inputs)
 			int	NumInputs = m_vecLayers[i].m_vecNeurons[j].m_NumInputs;
 			
 			//for each weight
-			if (NumInputs % 4 == 0) {
+			if ((NumInputs-1) % 4 == 0) {
 				for (int k=0; k<NumInputs - 1; k+=4)
 				{
 					//sum the weights x inputs

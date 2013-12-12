@@ -8,7 +8,8 @@ using namespace std;
 
 
 
-CTimer::CTimer() : m_FPS(0), m_TimeElapsed(0.0f)
+CTimer::CTimer() : m_FPS(0), m_TimeElapsed(0.0f), m_FrameTime(0),
+				   m_LastTime(0), m_PerfCountFreq(0)
 				  
 {
 	//how many ticks per sec do we get
@@ -25,7 +26,8 @@ CTimer::CTimer() : m_FPS(0), m_TimeElapsed(0.0f)
 //
 //-------------------------------------------------------------------------
 
-CTimer::CTimer(float fps): m_FPS(fps), m_TimeElapsed(0.0f)
+CTimer::CTimer(float fps): m_FPS(fps), m_TimeElapsed(0.0f), m_LastTime(0),
+						   m_PerfCountFreq(0)
 {
 
 	//how many ticks per sec do we get
@@ -49,9 +51,9 @@ void CTimer::Start()
 {
 	//get the time
 	//QueryPerformanceCounter( (LARGE_INTEGER*) &m_LastTime);
-	timespec temp;
-	clock_gettime(CLOCK_REALTIME, &temp);
-	m_LastTime = temp.tv_sec*1000000 + temp.tv_nsec;
+	timespec start;
+	clock_gettime(CLOCK_REALTIME, &start);
+	m_LastTime = start.tv_sec*1000000 + start.tv_nsec;
 	//update time to render next frame
 	m_NextTime = m_LastTime + m_FrameTime;
 
@@ -66,8 +68,6 @@ void CTimer::Start()
 //----------------------------------------------------------------------------
 bool CTimer::ReadyForNextFrame()
 {
-
-	cout << "HERE" << endl;
 	if (!m_FPS)
   {
     //MessageBox(NULL, "No FPS set in timer", "Doh!", 0);
@@ -76,11 +76,9 @@ bool CTimer::ReadyForNextFrame()
   }
   
   //QueryPerformanceCounter( (LARGE_INTEGER*) &m_CurrentTime);
-  timespec temp;
-  clock_gettime(CLOCK_REALTIME, &temp);
-  m_CurrentTime = temp.tv_sec*1000000 + temp.tv_nsec;
-  	cout << "m_CurrentTime = " << m_CurrentTime << endl;
-  	cout << "m_NextTime = " << m_NextTime << endl;
+  timespec ready;
+  clock_gettime(CLOCK_REALTIME, &ready);
+  m_CurrentTime = ready.tv_sec*1000000 + ready.tv_nsec;
 
 	if (m_CurrentTime > m_NextTime)
 	{	
@@ -106,9 +104,9 @@ bool CTimer::ReadyForNextFrame()
 double CTimer::TimeElapsed()
 {
 	//QueryPerformanceCounter( (LARGE_INTEGER*) &m_CurrentTime);
-	timespec temp;
-  	clock_gettime(CLOCK_REALTIME, &temp);
-  	m_CurrentTime = temp.tv_sec*1000000 + temp.tv_nsec;
+	timespec elapsed;
+  	clock_gettime(CLOCK_REALTIME, &elapsed);
+  	m_CurrentTime = elapsed.tv_sec*1000000 + elapsed.tv_nsec;
 
 
 	m_TimeElapsed	= (m_CurrentTime - m_LastTime) * m_TimeScale;
@@ -118,15 +116,3 @@ double CTimer::TimeElapsed()
 	return m_TimeElapsed;
 		
 }
-
-
-/*int main() {
-	CTimer x;
-	x.Start();
-	for (int i = 0; i < 30; ++i)
-	{
-		sleep(1);
-	}
-	cout << x.TimeElapsed();
-	return 0;
-}*/
