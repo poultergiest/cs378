@@ -35,7 +35,12 @@ void Cleanup()
 bool doExit = false;
 SDL_Event event;
 
-static void event_filter(const SDL_Event * event, SDL_Surface * data_sf)
+
+//------------------------- EventFilter --------------------------------
+//
+//	The SDL event handler for keystrokes and mouse clicks
+//-----------------------------------------------------------------------
+static void EventFilter(const SDL_Event * event, SDL_Surface * data_sf)
 { 
 	if (event->type == SDL_QUIT)
 		doExit = true;
@@ -58,6 +63,8 @@ static void event_filter(const SDL_Event * event, SDL_Surface * data_sf)
 	}
 }
 
+
+// Used to initilize our controller
 void init(SDL_Surface * data_sf) {
 	//seed the random number generator
 	srand(time(NULL));
@@ -90,7 +97,7 @@ int main(int argc, char **argv) {
 	while (!bDone) {
 		while( SDL_PollEvent( &event ) )
         	{
-        		event_filter(&event, data_sf);
+        		EventFilter(&event, data_sf);
 	        	if(doExit) bDone = true;
         	}
 
