@@ -150,6 +150,7 @@ void CNeuralNet::PutWeights(vector<double> &weights)
 		for (int j=0; j<m_vecLayers[i].m_NumNeurons; ++j)
 		{
 			//for each weight
+			cout << "inputs: " << m_vecLayers[i].m_vecNeurons[j].m_NumInputs << endl;
 			if(m_vecLayers[i].m_vecNeurons[j].m_NumInputs % 5 == 0) {
 				int k = 0;
 					//unroll for visualization

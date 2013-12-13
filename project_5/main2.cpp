@@ -35,6 +35,21 @@ void Cleanup()
 bool doExit = false;
 SDL_Event event;
 
+static void render(SDL_Surface * sf)
+{
+  SDL_Surface * screen = SDL_GetVideoSurface();
+  if(SDL_BlitSurface(sf, NULL, screen, NULL) == 0)
+    SDL_UpdateRect(screen, 0, 0, 0, 0);
+}
+
+static void colorBG(struct rgbData data[][WIDTH], struct rgbData color) {
+  for(int x = 0; x < WIDTH; x++) {
+    for(int y = 0; y < HEIGHT; y++) {
+      data[y][x] = color;
+    }
+  }
+}
+
 
 //------------------------- EventFilter --------------------------------
 //

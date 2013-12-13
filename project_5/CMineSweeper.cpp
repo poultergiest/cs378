@@ -115,7 +115,7 @@ bool CMinesweeper::Update(vector<SVector2D> &mines)
 	//clamp rotation
 	Clamp(RotForce, -CParams::dMaxTurnRate, CParams::dMaxTurnRate);
 
-  m_dRotation += RotForce;
+	m_dRotation += RotForce;
 	
 	m_dSpeed = (m_lTrack + m_rTrack);	
 
@@ -124,7 +124,7 @@ bool CMinesweeper::Update(vector<SVector2D> &mines)
 	m_vLookAt.y = cos(m_dRotation);
 
 	//update position
-  m_vPosition += (m_vLookAt * m_dSpeed);
+	m_vPosition += (m_vLookAt * m_dSpeed);
 
 	//wrap around window limits
 	if (m_vPosition.x > CParams::WindowWidth) m_vPosition.x = 0;

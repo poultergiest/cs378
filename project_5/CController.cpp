@@ -101,7 +101,7 @@ CController::CController(): m_NumSweepers(CParams::iNumSweepers),
 	{
 		m_MineVB.push_back(mine[i]);
 	}
-	m_bFastRender = true;
+	m_bFastRender = false;
 }
 
 
@@ -222,7 +222,7 @@ void CController::Render(struct rgbData data[][WIDTH])
 	//render the stats
 	string s = "Generation:          " + itos(m_iGenerations);
 	//TextOut(surface, 5, 0, s.c_str(), s.size());
-	drawstring(data, 5, 20, s.c_str(), m_BlackPen);
+	drawstring(data, 5, 0, s.c_str(), m_BlackPen);
 
 	//do not render if running at accelerated speed
 	if (!m_bFastRender)
@@ -339,12 +339,11 @@ void CController::PlotStats(struct rgbData data[][WIDTH])
 	string s = "Best Fitness:       " + ftos(m_pGA->BestFitness());
 	
 	//TextOut(surface, 5, 20, s.c_str(), s.size());
-	rgbData white = {255, 255, 255};
-	drawstring(data, 5, 20, s.c_str(), white);
+	drawstring(data, 5, 20, s.c_str(), m_BlackPen);
 
 	s = "Average Fitness: " + ftos(m_pGA->AverageFitness());
 	//TextOut(surface, 5, 40, s.c_str(), s.size());
-	drawstring(data, 5, 40, s.c_str(), white);
+	drawstring(data, 5, 40, s.c_str(), m_BlackPen);
 
 	//render the graph
 	float HSlice = (float)cxClient/(m_iGenerations+1);
@@ -354,13 +353,18 @@ void CController::PlotStats(struct rgbData data[][WIDTH])
 	float x = 0;
 
 	//m_OldPen = (HPEN)SelectObject(surface, m_RedPen);
+	m_OldPen = m_RedPen;
 
 	//MoveToEx(surface, 0, cyClient, NULL);
+	int oldx = 0;
+	int oldy = cyClient;
 	int i = 0;
 	for (i=0; i<m_vecBestFitness.size(); ++i)
 	{
 		//LineTo(surface, x, cyClient - VSlice*m_vecBestFitness[i]);
-
+		drawline(data, oldx, oldy, x, cyClient - VSlice*m_vecBestFitness[i], m_OldPen);
+		oldx = x;
+		oldy = cyClient - VSlice*m_vecBestFitness[i];
 		x += HSlice;
 	}
 

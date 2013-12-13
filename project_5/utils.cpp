@@ -62,30 +62,15 @@ bool init_app(const char * name, SDL_Surface * icon, uint32_t flags)
   return 1;
 }
 
-void init_data(struct rgbData data[][WIDTH])
-{
-  memset(data, 255, WIDTH*HEIGHT*sizeof(rgbData));
-}
-
-void render(SDL_Surface * sf)
-{
-  SDL_Surface * screen = SDL_GetVideoSurface();
-  if(SDL_BlitSurface(sf, NULL, screen, NULL) == 0)
-    SDL_UpdateRect(screen, 0, 0, 0, 0);
-}
-
 void setPixel(struct rgbData data[][WIDTH], int x, int y, struct rgbData color) {
   if (x < 0 || x >= WIDTH) return;
   if (y < 0 || y >= HEIGHT) return;
   data[y][x] = color;
 }
 
-void colorBG(struct rgbData data[][WIDTH], struct rgbData color) {
-  for(int x = 0; x < WIDTH; x++) {
-    for(int y = 0; y < HEIGHT; y++) {
-      setPixel(data, x, y, color);
-    }
-  }
+void init_data(struct rgbData data[][WIDTH])
+{
+  memset(data, 255, WIDTH*HEIGHT*sizeof(rgbData));
 }
 
 void drawcircle(struct rgbData data[][WIDTH], int x0, int y0, int radius, rgbData color) {
