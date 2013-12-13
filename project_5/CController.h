@@ -66,6 +66,7 @@ private:
 	rgbData		m_RedPen;
 	rgbData		m_BluePen;
 	rgbData		m_GreenPen;
+	rgbData		m_BlackPen;
 	rgbData		m_OldPen;
 	
 	//handle to the application window
@@ -89,7 +90,7 @@ private:
 
 public:
 
-	CController(SDL_Surface* surface);
+	CController();
 
 	~CController();
 

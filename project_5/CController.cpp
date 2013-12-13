@@ -38,12 +38,11 @@ const SPoint mine[NumMineVerts] = {SPoint(-1, -1),
 //	initilaize the sweepers, their brains and the GA factory
 //
 //-----------------------------------------------------------------------
-CController::CController(SDL_Surface* surface): m_NumSweepers(CParams::iNumSweepers), 
+CController::CController(): m_NumSweepers(CParams::iNumSweepers), 
 					m_pGA(NULL),
 					m_bFastRender(false),
 					m_iTicks(0),
 					m_NumMines(CParams::iNumMines),
-					m_surface(surface),
 					m_iGenerations(0),
 					cxClient(CParams::WindowWidth),
 					cyClient(CParams::WindowHeight)
@@ -88,6 +87,9 @@ CController::CController(SDL_Surface* surface): m_NumSweepers(CParams::iNumSweep
 	m_GreenPen.red = 0;
 	m_GreenPen.green = 175;
 	m_GreenPen.blue = 0;
+	m_BlackPen.red = 0;
+	m_BlackPen.green = 0;
+	m_BlackPen.blue = 0;
 
 	//fill the vertex buffers
 	for (i=0; i<NumSweeperVerts; ++i)
@@ -220,6 +222,7 @@ void CController::Render(struct rgbData data[][WIDTH])
 	//render the stats
 	string s = "Generation:          " + itos(m_iGenerations);
 	//TextOut(surface, 5, 0, s.c_str(), s.size());
+	drawstring(data, 5, 20, s.c_str(), m_BlackPen);
 
 	//do not render if running at accelerated speed
 	if (!m_bFastRender)
@@ -336,7 +339,6 @@ void CController::PlotStats(struct rgbData data[][WIDTH])
 	string s = "Best Fitness:       " + ftos(m_pGA->BestFitness());
 	
 	//TextOut(surface, 5, 20, s.c_str(), s.size());
-	rgbData black = {0, 0, 0};
 	rgbData white = {255, 255, 255};
 	drawstring(data, 5, 20, s.c_str(), white);
 
