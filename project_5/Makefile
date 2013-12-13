@@ -15,6 +15,10 @@ sweepers: ${SOURCE}
 	clear
 	${CC} -o ${TARGET} ${SOURCE} -lrt -lSDL -msse4
 
+sweepersf: ${SOURCE}
+	clear
+	${CC} ${CFLAGS} -o ${TARGET} ${SOURCE} -lrt -lSDL -msse4
+
 controller: ${CSOURCE}
 	clear
 	${CC} ${CFLAGS} -c ${CSOURCE}

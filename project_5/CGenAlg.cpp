@@ -273,9 +273,12 @@ void CGenAlg::CalculateBestWorstAvTot()
 		clock_gettime(CLOCK_REALTIME, &current);
 		current = diff(start, current);
 		long el = current.tv_sec*1000 + current.tv_nsec/1000000;
-		cout << "Average = " << m_dAverageFitness << endl;
-		cout << "Time elapsed " << el << endl;
+		/*cout << "Average = " << m_dAverageFitness << endl;*/
+		cout << el << endl;
 		m_cFitnessReached += 5;
+		if (m_cFitnessReached == 45) {
+			cout << "DONE" << endl;
+		}
 	}
 }
 

@@ -150,15 +150,15 @@ void CNeuralNet::PutWeights(vector<double> &weights)
 		for (int j=0; j<m_vecLayers[i].m_NumNeurons; ++j)
 		{
 			//for each weight
-			if(m_vecLayers[i].m_vecNeurons[j].m_NumInputs % 4 == 0) {
-				for (int k=0; k<m_vecLayers[i].m_vecNeurons[j].m_NumInputs; k+=4)
-				{
+			if(m_vecLayers[i].m_vecNeurons[j].m_NumInputs % 5 == 0) {
+				int k = 0;
 					//unroll for visualization
 					m_vecLayers[i].m_vecNeurons[j].m_vecWeight[k] = weights[cWeight++];
 					m_vecLayers[i].m_vecNeurons[j].m_vecWeight[k+1] = weights[cWeight++];
 					m_vecLayers[i].m_vecNeurons[j].m_vecWeight[k+2] = weights[cWeight++];
 					m_vecLayers[i].m_vecNeurons[j].m_vecWeight[k+3] = weights[cWeight++];
-				}
+					m_vecLayers[i].m_vecNeurons[j].m_vecWeight[k+4] = weights[cWeight++];
+
 			}
 			else {
 				for (int k=0; k<m_vecLayers[i].m_vecNeurons[j].m_NumInputs; k++) {
@@ -207,19 +207,23 @@ int CNeuralNet::GetNumberOfWeights() const
 	//for each layer
 	for (int i=0; i<m_NumHiddenLayers + 1; ++i) {
 		//for each neuron
-		if (m_vecLayers[i].m_NumNeurons % 4 == 0) {
-			for (int j=0; j<m_vecLayers[i].m_NumNeurons; j+=4) {
+		if (m_vecLayers[i].m_NumNeurons % 6 == 0) {
+			for (int j=0; j<m_vecLayers[i].m_NumNeurons; j+=6) {
 			//for each weight
 			
 				weights += m_vecLayers[i].m_vecNeurons[j].m_NumInputs;
 				weights += m_vecLayers[i].m_vecNeurons[j+1].m_NumInputs;
 				weights += m_vecLayers[i].m_vecNeurons[j+2].m_NumInputs;
 				weights += m_vecLayers[i].m_vecNeurons[j+3].m_NumInputs;
+				weights += m_vecLayers[i].m_vecNeurons[j+4].m_NumInputs;
+				weights += m_vecLayers[i].m_vecNeurons[j+5].m_NumInputs;
 			}
 		}
 		else {
-			for (int j=0; j<m_vecLayers[i].m_NumNeurons; j++)
+			for (int j=0; j<m_vecLayers[i].m_NumNeurons; j+=2) {
 				weights += m_vecLayers[i].m_vecNeurons[j].m_NumInputs;
+				weights += m_vecLayers[i].m_vecNeurons[j+1].m_NumInputs;
+			}
 		}
 	}
 	return weights;
@@ -323,6 +327,7 @@ vector<double> CNeuralNet::Update(vector<double> &inputs)
 			
 			//for each weight
 			if ((NumInputs-1) % 4 == 0) {
+
 				for (int k=0; k<NumInputs - 1; k+=4)
 				{
 					//sum the weights x inputs
