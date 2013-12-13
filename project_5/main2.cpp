@@ -112,6 +112,7 @@ int main(int argc, char **argv) {
 	// Enter the message loop
 	bool bDone = false;
 	rgbData white = {255,255,255};
+	Uint32 white2 = SDL_MapRGB(data_sf->format, 255, 255, 255);
 
 	while (!bDone) {
 		while( SDL_PollEvent( &event ) )
@@ -128,12 +129,12 @@ int main(int argc, char **argv) {
 				bDone = true;
 			}
 
-			if(!g_pController->FastRender()) {
+			// if(!g_pController->FastRender()) {
 				//render
-				colorBG(buffer, white);
+				SDL_FillRect(data_sf, NULL, white2);
 				g_pController->Render(buffer);
 				render(data_sf);
-			}
+			// }
 		}
 	}
 	SDL_FreeSurface( data_sf );

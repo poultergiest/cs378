@@ -225,8 +225,8 @@ void CController::Render(struct rgbData data[][WIDTH])
 	drawstring(data, 5, 0, s.c_str(), m_BlackPen);
 
 	//do not render if running at accelerated speed
-	if (!m_bFastRender)
-	{
+	// if (!m_bFastRender)
+	// {
 		//keep a record of the old pen
 		m_OldPen = m_GreenPen;
 
@@ -321,11 +321,11 @@ void CController::Render(struct rgbData data[][WIDTH])
 		//put the old pen back
 		//SelectObject(surface, m_OldPen);
 
-	}//end if
-	else
-	{
-		PlotStats(data);
-	}
+	// }//end if
+	// else
+	// {
+	// 	PlotStats(data);
+	// }
 
 }
 
