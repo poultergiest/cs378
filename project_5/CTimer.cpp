@@ -78,7 +78,7 @@ bool CTimer::ReadyForNextFrame()
   timespec ready;
   clock_gettime(CLOCK_REALTIME  , &ready);
   m_CurrentTime = ready.tv_sec*1000000000 + ready.tv_nsec;
-  	cout << "m_CurrentTime " << m_CurrentTime << endl;
+  	//cout << "m_CurrentTime " << m_CurrentTime << endl;
 
 	if (m_CurrentTime > m_NextTime)
 	{	
