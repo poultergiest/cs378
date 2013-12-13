@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
 	while (!bDone) {
 		while( SDL_PollEvent( &event ) )
         	{
-        		EventFilter(&event, data_sf);
+        		EventFilter(&event);
 	        	if(doExit) bDone = true;
         	}
 
@@ -113,10 +113,12 @@ int main(int argc, char **argv) {
 				bDone = true;
 			}
 
-			//render
-			// colorBG(buffer, white);
-			// g_pController->Render(buffer);
-			// render(data_sf);
+			if(!g_pController->FastRender()) {
+				//render
+				colorBG(buffer, white);
+				g_pController->Render(buffer);
+				render(data_sf);
+			}
 		}
 	}
 	SDL_FreeSurface( data_sf );
